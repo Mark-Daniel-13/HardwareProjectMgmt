@@ -1,0 +1,145 @@
+﻿@page "/Admin/User/Manage/"
+@page "/Admin/User/Manage/{dataId:int}"
+@inject NavigationManager navManager;
+@inject Blazored.SessionStorage.ISessionStorageService session
+<div class="container">
+    @if (notif?.ResultMsg != null)
+    {
+        <div class="row">
+            <div class="error-notif ">
+                <em>@notif.ResultMsg</em>
+            </div>
+        </div>
+    }
+    <div class="row">
+        <div class="row">
+            <EditForm Model="dataModel" OnValidSubmit="ExecuteForm" class="card-body">
+                <DataAnnotationsValidator />
+                <div class="form-group row">
+                    <label for="@dataModel.FirstName" class="col-md-2 col-form-label mr-2">First Name:</label>
+                    <div class="col-md-10">
+                        <InputText class="form-control" @bind-Value="dataModel.FirstName" />
+                        <ValidationMessage For="@(() => dataModel.FirstName)" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="@dataModel.LastName" class="col-md-2 col-form-label mr-2">Last Name:</label>
+                    <div class="col-md-10">
+                        <InputText class="form-control" @bind-Value="dataModel.LastName" />
+                        <ValidationMessage For="@(() => dataModel.LastName)" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="@dataModel.Username" class="col-md-2 col-form-label mr-2">Username:</label>
+                    <div class="col-md-10">
+                        <InputText class="form-control" @bind-Value="dataModel.Username" />
+                        <ValidationMessage For="@(() => dataModel.Username)" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="@dataModel.Email" class="col-md-2 col-form-label mr-2">Email:</label>
+                    <div class="col-md-10">
+                        <InputText class="form-control" @bind-Value="dataModel.Email" />
+                        <ValidationMessage For="@(() => dataModel.Email)" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="@dataModel.Password" class="col-md-2 col-form-label mr-2">Password:</label>
+                    <div class="col-md-10">
+                        <InputText class="form-control" type="password" @bind-Value="dataModel.Password" />
+                        <ValidationMessage For="@(() => dataModel.Password)" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="@dataModel.ConfirmPassword" class="col-md-2 col-form-label mr-2">Confirm Password:</label>
+                    <div class="col-md-10">
+                        <InputText class="form-control" type="password" @bind-Value="dataModel.ConfirmPassword" />
+                        <ValidationMessage For="@(() => dataModel.ConfirmPassword)" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-md-2 col-form-label mr-2">UserRole:</label>
+                    <div class="col-md-10">
+                        <select @bind="dataModel.UserRole">
+                            @foreach (var role in Enum.GetValues(typeof(Enums.Userrole)))
+                            {
+                                if (dataId == 0)
+                                {
+                                    <option value="@Convert.ToInt32(role)">@role</option>
+                                }
+                                else
+                                {
+                                    <option value="@Convert.ToInt32(role)" selected="@SelectRole(Convert.ToInt32(role))">@role</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 text-right">
+                        <button type="submit" class="btn btn-success"> Save</button>
+                    </div>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int dataId { get; set; }
+
+    public ViewModel.UserManageModel dataModel = new();
+    private Business.Helpers.ResultHandler notif = new();
+
+    protected async override Task OnInitializedAsync()
+    {
+        if (dataId != 0)
+        {
+            using (var DbAccess = new Business.Users.Facades.User())
+            {
+
+                var _dataModel = await DbAccess.GetByIdWithRoles(dataId);
+                if (_dataModel == null)
+                {
+                    await session.SetItemAsync(Business.Globals.SessionNotifName, new Business.Helpers.ResultHandler() { ResultMsg = "User not found on database, please contact your administrator.", Result = false });
+                    navManager.NavigateTo("/Admin/User");
+                }
+                else
+                {
+                    dataModel = ViewModel.UserManageModel.ToModel(_dataModel);
+                }
+            }
+        }
+    }
+    private bool SelectRole(int roleId)
+    {
+        if (roleId == dataModel.UserRole) return true;
+        return false;
+    }
+    private bool checkPassword()
+    {
+        if (dataId != 0) return true;
+        if (string.IsNullOrEmpty(dataModel.Password)) return false;
+        return true;
+    }
+    private async Task ExecuteForm()
+    {
+        if (!checkPassword())
+        {
+            notif = new Business.Helpers.ResultHandler() { ResultMsg= "Please enter valid password",Result = false};
+        }
+        else
+        {
+            using (var DbAccess = new Business.Users.Facades.User())
+            {
+                var model = ViewModel.UserManageModel.ToBusinessModel(dataModel);
+                Business.Helpers.ResultHandler result;
+                result = dataId != 0 ? await DbAccess.UpdateUser(model) : await DbAccess.AddUser(model);
+
+                await session.SetItemAsync(Business.Globals.SessionNotifName, new Business.Helpers.ResultHandler() { ResultMsg = result.ResultMsg, Result = result.Result });
+                navManager.NavigateTo("/Admin/User");
+            }
+        }
+    }
+}

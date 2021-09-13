@@ -1,0 +1,44 @@
+﻿:root {
+    --mainColor: #1B3E84;
+    --highLightColor: #E1E9FB;
+}
+
+.bg-theme-color {
+    background-color: #FFFFFF;
+}
+.wrapper-flex-content-middle {
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+.wrapper-flex-justify-center {
+    display: flex;
+    justify-content: center;
+}
+.wrapper-flex-align-center {
+    display: flex;
+    align-content: center;
+}
+.wrapper-screen-height{
+    height:100vh;
+}
+.custom-card {
+    border-radius: 6px;
+}
+.custom-card-shadow {
+    box-shadow: 0 19px 38px rgba(0,0,0,0.30), 0 15px 12px rgba(0,0,0,0.22);
+}
+.custom-card-shadow-lighter {
+    box-shadow: 0 3px 6px rgba(0,0,0,0.6), 0 3px 6px rgba(0,0,0,0.13);
+}
+
+.image-relative {
+    position:relative;
+    width:100%;
+}
+.top-row {
+    background-color: var(--mainColor);
+}
+.row-active {
+    background-color:var(--highLightColor);
+}

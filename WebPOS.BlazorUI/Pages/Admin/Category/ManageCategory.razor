@@ -1,0 +1,72 @@
+﻿@page "/Admin/Category/Manage/"
+@page "/Admin/Category/Manage/{categoryId:int}"
+@inject NavigationManager navManager;
+@inject Blazored.SessionStorage.ISessionStorageService session
+<div class="container">
+    <div class="row">
+        <div class="row">
+            <EditForm Model="categoryModel" OnValidSubmit="ExecuteForm" class="card-body">
+                <DataAnnotationsValidator />
+                <div class="form-group row">
+                    <label for="@categoryModel.Name" class="col-md-2 col-form-label mr-2">Name:</label>
+                    <div class="col-md-10">
+                        <InputText class="form-control" @bind-Value="categoryModel.Name" />
+                        <ValidationMessage For="@(() => categoryModel.Name)" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="@categoryModel.Description" class="col-md-2 col-form-label mr-2">Description:</label>
+                    <div class="col-md-10">
+                        <InputText class="form-control" @bind-Value="categoryModel.Description" />
+                        <ValidationMessage For="@(() => categoryModel.Description)" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 text-right">
+                        <button type="submit" class="btn btn-success"> Save</button>
+                    </div>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int categoryId { get; set; }
+
+    public ViewModel.CategoryManageModel categoryModel = new();
+
+    protected async override Task OnInitializedAsync()
+    {
+        if (categoryId != 0)
+        {
+            using (var categoryDbAccess = new Business.Product.Facades.Category())
+            {
+                var _categoryModel = await categoryDbAccess.GetById(categoryId);
+                if (_categoryModel == null)
+                {
+                    await session.SetItemAsync(Business.Globals.SessionNotifName,new Business.Helpers.ResultHandler(){ ResultMsg= "Category not found on database, please contact your administrator.",Result= false });
+                    navManager.NavigateTo("/Admin/Category");
+                }
+                else
+                {
+                    categoryModel = ViewModel.CategoryManageModel.ToModel(_categoryModel);
+                }
+            }
+        }
+    }
+
+    private async Task ExecuteForm()
+    {
+        using (var categoryDbAccess = new Business.Product.Facades.Category())
+        {
+            var model = ViewModel.CategoryManageModel.ToBusinessModel(categoryModel);
+            Business.Helpers.ResultHandler result;
+            result = categoryId != 0 ? await categoryDbAccess.UpdateCategory(model) : await categoryDbAccess.AddCategory(model);
+
+            await session.SetItemAsync(Business.Globals.SessionNotifName, new Business.Helpers.ResultHandler() { ResultMsg = result.ResultMsg, Result = result.Result });
+            navManager.NavigateTo("/Admin/Category");
+        }
+    }
+}

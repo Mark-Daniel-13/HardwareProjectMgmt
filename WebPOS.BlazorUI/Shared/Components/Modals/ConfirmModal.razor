@@ -1,0 +1,14 @@
+﻿<p>Are you sure you want to remove the selected @DataName?</p>
+<button @onclick="()=>SetResult(true)" class="btn btn-primary">Yes</button>
+<button @onclick="()=>SetResult(false)" class="btn btn-danger">No</button>
+@code {
+    [Parameter]
+    public string DataName { get; set; }
+    [Parameter]
+    public EventCallback<bool> ConfirmationResult { get; set; }
+    private bool result { get; set; }
+    private void SetResult(bool _result) {
+        result = _result;
+        ConfirmationResult.InvokeAsync(result);
+    }
+}

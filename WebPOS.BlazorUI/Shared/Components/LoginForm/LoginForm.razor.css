@@ -1,0 +1,11 @@
+﻿.custom-login-form {
+   
+}
+.login-form-header {
+    flex-direction:column;
+    padding:1em;
+}
+img {
+    height:4em;
+    overflow:hidden;
+}

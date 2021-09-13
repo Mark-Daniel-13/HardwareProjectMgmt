@@ -1,0 +1,164 @@
+﻿@page "/Admin/Product/Manage/"
+@page "/Admin/Product/Manage/{productId:int}"
+@inject NavigationManager navManager;
+@inject Blazored.SessionStorage.ISessionStorageService session
+@using System.IO;
+<div class="container">
+    @if (notif?.ResultMsg != null)
+    {
+        <div class="row">
+            <div class="error-notif ">
+                <em>@notif.ResultMsg</em>
+            </div>
+        </div>
+    }
+    <div class="row">
+        <div class="row">
+            <EditForm Model="productModel" OnValidSubmit="ExecuteForm" class="card-body">
+                <DataAnnotationsValidator />
+                <div class="form-group row">
+                    <label for="@productModel.Name" class="col-md-2 col-form-label mr-2">Name:</label>
+                    <div class="col-md-10">
+                        <InputText class="form-control" @bind-Value="productModel.Name" />
+                        <ValidationMessage For="@(() => productModel.Name)" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="@productModel.Description" class="col-md-2 col-form-label mr-2">Description:</label>
+                    <div class="col-md-10">
+                        <InputText class="form-control" @bind-Value="productModel.Description" />
+                        <ValidationMessage For="@(() => productModel.Description)" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="@productModel.Quantity" class="col-md-2 col-form-label mr-2">Quantity:</label>
+                    <div class="col-md-10">
+                        <InputText class="form-control" type="number" @bind-Value="productModel.Quantity" />
+                        <ValidationMessage For="@(() => productModel.Quantity)" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="@productModel.isAvailable" class="col-md-2 col-form-label mr-2">isAvailable:</label>
+                    <div class="col-md-10">
+                        <InputCheckbox class="form-control" @bind-Value="productModel.isAvailable" />
+                        <ValidationMessage For="@(() => productModel.isAvailable)" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-md-2 col-form-label mr-2">Category:</label>
+                    <div class="col-md-10">
+                        <select @bind="productModel.CategoryId">
+                            @foreach (var category in categoryModel)
+                            {
+                                if (productId == 0)
+                                {
+                                    <option value="@Convert.ToInt32(category.CategoryId)">@category.Name</option>
+                                }
+                                else
+                                {
+                                    <option value="@Convert.ToInt32(category.CategoryId)" selected="@SelectCategory(Convert.ToInt32(category.CategoryId))">@category.Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="@productModel.Image" class="col-md-2 col-form-label mr-2">Image:</label>
+                    <div class="col-md-10">
+                        <InputFile class="form-control" OnChange="HandleImage" />
+                    </div>
+                </div>
+                <div class="row">
+                    <img src="@imageSrc" alt="product image" width="200" height="200"/>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 text-right">
+                        <button type="submit" class="btn btn-success"> Save</button>
+                    </div>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int productId { get; set; }
+
+    public ViewModel.ProductManageModel productModel = new();
+    public List<ViewModel.CategoryViewModel> categoryModel = new();
+    private Business.Helpers.ResultHandler notif = new();
+    private string imageSrc;
+
+    protected async override Task OnInitializedAsync()
+    {
+        if (productId != 0)
+        {
+            using (var DbAccess = new Business.Product.Facades.Product())
+            {
+                var _Model = await DbAccess.GetById(productId);
+                if (_Model == null)
+                {
+                    await session.SetItemAsync(Business.Globals.SessionNotifName,new Business.Helpers.ResultHandler(){ ResultMsg= "Product not found on database, please contact your administrator.",Result= false });
+                    navManager.NavigateTo("/Admin/Product");
+                }
+                else
+                {
+                    productModel = ViewModel.ProductManageModel.ToModel(_Model);
+                }
+            }
+        }
+        using (var DbAccessCategory = new Business.Product.Facades.Category())
+        {
+            var _CModel = await DbAccessCategory.GetAll();
+            if (_CModel != null)
+            {
+                categoryModel = ViewModel.CategoryViewModel.ToModelList(_CModel);
+            }
+        }
+        imageSrc = productModel.Image != null ? Business.Helpers.ImageHelper.GetImageSrcString(productModel.ImageType, productModel.Image) : "img/user_empty.png";
+    }
+
+    private async Task ExecuteForm()
+    {
+        if (!checkCategory())
+        {
+            notif = new Business.Helpers.ResultHandler() { ResultMsg = "Please enter valid category", Result = false };
+        }
+        else
+        {
+            using (var DbAccess = new Business.Product.Facades.Product())
+            {
+                var model = ViewModel.ProductManageModel.ToBusinessModel(productModel);
+                Business.Helpers.ResultHandler result;
+                result = productId != 0 ? await DbAccess.UpdateProduct(model) : await DbAccess.AddProduct(model);
+
+                await session.SetItemAsync(Business.Globals.SessionNotifName, new Business.Helpers.ResultHandler() { ResultMsg = result.ResultMsg, Result = result.Result });
+                navManager.NavigateTo("/Admin/Product");
+            }
+        }
+    }
+    private bool checkCategory()
+    {
+        if (productModel.CategoryId == 0) return false;
+        return true;
+    }
+    private bool SelectCategory(int categoryId)
+    {
+        if (categoryId == productModel.CategoryId) return true;
+        return false;
+    }
+    public List<string> AllowedImgType = new List<string>(){ "image/jpg", "image/jpeg", "image/png" };
+    public async Task HandleImage(InputFileChangeEventArgs files) {
+        if (AllowedImgType.Contains(files.File.ContentType))
+        {
+            var file = files.File;
+            var data = new byte[file.Size];
+            await file.OpenReadStream().ReadAsync(data);
+            productModel.ImageName = file.Name;
+            productModel.ImageType = file.ContentType;
+            productModel.Image = data;
+            imageSrc = Business.Helpers.ImageHelper.GetImageSrcString(file.ContentType, productModel.Image);
+        }
+    }
+}
