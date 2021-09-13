@@ -12,7 +12,7 @@ namespace WebPOS.Data.Product.DataAccess
 {
     public class Product:GeneralDataAccess
     {
-        string connString = ConfigurationManager.ConnectionStrings["Resto_POS"]?.ConnectionString;
+        string connString = ConfigurationManager.ConnectionStrings["App_DB"]?.ConnectionString;
         public async Task<List<Models.Product>> GetAll(bool forceGet = false)
         {
             string sqlSyntax = (forceGet) ? "Select * from products" : "Select * from products Where DeletedAt IS NULL Order By ProductId desc";
@@ -53,16 +53,15 @@ namespace WebPOS.Data.Product.DataAccess
         public async Task<bool> UpdateProduct(Models.Product product)
         {
             var p = product;
-            string sqlSyntax = @"Update products Set ProductName=@ProductName,ProductDescription=@ProductDescription,CategoryId=@CategoryId,
-                                    Quantity=@Quantity,Image=@Image,ImageType=@ImageType,ImageName=@ImageName,isAvailable=@isAvailable,updatedAt=@UpdatedAt Where ProductId=@ProductId";
+            string sqlSyntax = @"Update products Set Name=@Name,CategoryId=@CategoryId,updatedAt=@UpdatedAt Where ProductId=@ProductId";
             var result = await ModifyData(sqlSyntax, p, connString);
             return result == 0 ? false : true;
         }
         public async Task<bool> AddProduct(Models.Product product)
         {
             var p = product;
-            string sqlSyntax = @"Insert Into products(ProductName,ProductDescription,CategoryId,isAvailable,Quantity,Image,ImageType,ImageName,createdAt,updatedAt)
-                                    VALUES(@ProductName,@ProductDescription,@CategoryId,@isAvailable,@Quantity,@Image,@ImageType,@ImageName,@CreatedAt,@UpdatedAt)";
+            string sqlSyntax = @"Insert Into products(Name,CategoryId,createdAt,updatedAt)
+                                    VALUES(@Name,@CategoryId,@CreatedAt,@UpdatedAt)";
             var result = await ModifyData(sqlSyntax, p, connString);
             return result == 0 ? false : true;
         }

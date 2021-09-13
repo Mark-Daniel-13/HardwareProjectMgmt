@@ -21,8 +21,7 @@ namespace WebPOS.Business.Product.Models
             return categoryModelList = categories.Select(category => new Category
             {
                 CategoryId = category.CategoryId,
-                Name = category.CategoryName,
-                Description = category.CategoryDescription,
+                Name = category.Name,
                 CreatedAt = category.CreatedAt,
                 DeletedAt = category.DeletedAt,
                 UpdatedAt = category.UpdatedAt,
@@ -34,8 +33,7 @@ namespace WebPOS.Business.Product.Models
             return new Category
             {
                 CategoryId = category.CategoryId,
-                Name = category.CategoryName,
-                Description = category.CategoryDescription,
+                Name = category.Name,
                 CreatedAt = category.CreatedAt,
                 DeletedAt = category.DeletedAt,
                 UpdatedAt = category.UpdatedAt,
@@ -47,8 +45,7 @@ namespace WebPOS.Business.Product.Models
             return new Data.Product.Models.Category
             {
                 CategoryId = category.CategoryId,
-                CategoryName = category.Name,
-                CategoryDescription = category.Description,
+                Name = category.Name,
                 CreatedAt = category.CreatedAt,
                 DeletedAt = category.DeletedAt,
                 UpdatedAt = category.UpdatedAt,

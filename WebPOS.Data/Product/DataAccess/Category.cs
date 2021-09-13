@@ -9,7 +9,7 @@ namespace WebPOS.Data.Product.DataAccess
 {
     public class Category : GeneralDataAccess
     {
-        string connString = ConfigurationManager.ConnectionStrings["Resto_POS"]?.ConnectionString;
+        string connString = ConfigurationManager.ConnectionStrings["App_DB"]?.ConnectionString;
         public async Task<List<Models.Category>> GetAll(bool forceGet = false)
         {
             string sqlSyntax = (forceGet) ? "Select * from categories" : "Select * from categories Where DeletedAt IS NULL Order By CategoryId desc";
@@ -26,14 +26,14 @@ namespace WebPOS.Data.Product.DataAccess
         public async Task<bool> UpdateCategory(Models.Category category)
         {
             var p = category;
-            string sqlSyntax = @"Update categories Set CategoryName=@CategoryName,CategoryDescription=@CategoryDescription,updatedAt=@UpdatedAt Where CategoryId=@CategoryId";
+            string sqlSyntax = @"Update categories Set Name=@Name,updatedAt=@UpdatedAt Where CategoryId=@CategoryId";
             var result = await ModifyData(sqlSyntax, p, connString);
             return result == 0 ? false : true;
         }
         public async Task<bool> AddCategory(Models.Category category)
         {
             var p = category;
-            string sqlSyntax = @"Insert Into categories(CategoryName,CategoryDescription,createdAt,updatedAt) VALUES(@CategoryName,@CategoryDescription,@CreatedAt,@UpdatedAt)";
+            string sqlSyntax = @"Insert Into categories(Name,createdAt,updatedAt) VALUES(@Name,@CreatedAt,@UpdatedAt)";
             var result = await ModifyData(sqlSyntax, p, connString);
             return result == 0 ? false : true;
         }

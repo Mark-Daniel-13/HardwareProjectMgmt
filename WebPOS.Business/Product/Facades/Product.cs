@@ -75,7 +75,7 @@ namespace WebPOS.Business.Product.Facades
 
         private bool isDataValid(Models.Product product,bool includeId = false) {
             bool isValid = true;
-            if (string.IsNullOrEmpty(product.ProductName) || product.CategoryId == 0) {
+            if (string.IsNullOrEmpty(product.Name) || product.CategoryId == 0) {
                 isValid = false;
             }
             if (includeId) {

@@ -51,15 +51,6 @@
                             <th>
                                 Name
                             </th>
-                            <th>
-                                Description
-                            </th>
-                            <th>
-                                Quantity
-                            </th>
-                            <th>
-                                Available
-                            </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -74,22 +65,13 @@
                                     <td>
                                         @product.Name
                                     </td>
-                                    <td>
-                                        @product.Description
-                                    </td>
-                                    <td>
-                                        @product.Quantity
-                                    </td>
-                                    <td>
-                                        @(product.isAvailable ? "Yes" : "No")
-                                    </td>
                                 </tr>
                             }
                         }
                         else
                         {
                             <tr>
-                                <td colspan="5">
+                                <td colspan="2">
                                     No Records Found.
                                 </td>
                             </tr>
