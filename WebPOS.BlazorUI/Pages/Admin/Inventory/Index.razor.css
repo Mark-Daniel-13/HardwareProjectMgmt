@@ -1,0 +1,13 @@
+﻿.c-table, c-table-header, c-table-body, table {
+    width: 100%;
+}
+
+thead {
+    background-color: var(--mainColor);
+    color: white;
+}
+
+tbody > tr:hover {
+    background-color: var(--highLightColor);
+    cursor: pointer;
+}

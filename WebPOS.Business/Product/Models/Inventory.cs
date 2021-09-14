@@ -16,9 +16,6 @@ namespace WebPOS.Business.Product.Models
         public string UOM { get; set; }
         public double RetailPrice { get; set; }
         public double WholesalePrice { get; set; }
-        public byte[] Image { get; set; }
-        public string ImageName { get; set; }
-        public string ImageType { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }
@@ -36,9 +33,6 @@ namespace WebPOS.Business.Product.Models
                 UOM = inv.UOM,
                 RetailPrice = inv.RetailPrice,
                 WholesalePrice = inv.WholesalePrice,
-                Image = inv.Image,
-                ImageName = inv.ImageName,
-                ImageType = inv.ImageType,
                 CreatedAt = inv.CreatedAt,
                 UpdatedAt = inv.UpdatedAt,
                 DeletedAt = inv.DeletedAt,
@@ -57,9 +51,6 @@ namespace WebPOS.Business.Product.Models
                 UOM = inv.UOM,
                 RetailPrice = inv.RetailPrice,
                 WholesalePrice = inv.WholesalePrice,
-                Image = inv.Image,
-                ImageName = inv.ImageName,
-                ImageType = inv.ImageType,
                 CreatedAt = inv.CreatedAt,
                 UpdatedAt = inv.UpdatedAt,
                 DeletedAt = inv.DeletedAt,
@@ -77,9 +68,6 @@ namespace WebPOS.Business.Product.Models
                 UOM = inv.UOM,
                 RetailPrice = inv.RetailPrice,
                 WholesalePrice = inv.WholesalePrice,
-                Image = inv.Image,
-                ImageName = inv.ImageName,
-                ImageType = inv.ImageType,
                 CreatedAt = inv.CreatedAt,
                 UpdatedAt = inv.UpdatedAt,
                 DeletedAt = inv.DeletedAt,

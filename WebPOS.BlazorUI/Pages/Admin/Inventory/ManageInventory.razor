@@ -1,0 +1,147 @@
+﻿@page "/Admin/Inventory/Manage/"
+@page "/Admin/Inventory/Manage/{inventoryId:int}"
+@inject NavigationManager navManager;
+@inject Blazored.SessionStorage.ISessionStorageService session
+@using System.IO;
+<div class="container">
+    @if (notif?.ResultMsg != null)
+    {
+        <div class="row">
+            <div class="error-notif ">
+                <em>@notif.ResultMsg</em>
+            </div>
+        </div>
+    }
+    <div class="row">
+        <div class="row">
+            <EditForm Model="dataModel" OnValidSubmit="ExecuteForm" class="card-body">
+                <DataAnnotationsValidator />
+                <div class="form-group row">
+                    <label for="@dataModel.Description" class="col-md-2 col-form-label mr-2">Description:</label>
+                    <div class="col-md-10">
+                        <InputText class="form-control" @bind-Value="dataModel.Description" />
+                        <ValidationMessage For="@(() => dataModel.Description)" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="@dataModel.Quantity" class="col-md-2 col-form-label mr-2">Quantity:</label>
+                    <div class="col-md-10">
+                        <InputText class="form-control" @bind-Value="dataModel.Quantity" />
+                        <ValidationMessage For="@(() => dataModel.Quantity)" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="@dataModel.UOM" class="col-md-2 col-form-label mr-2">UOM:</label>
+                    <div class="col-md-10">
+                        <InputText class="form-control" @bind-Value="dataModel.UOM" />
+                        <ValidationMessage For="@(() => dataModel.UOM)" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="@dataModel.RetailPrice" class="col-md-2 col-form-label mr-2">Retail Price:</label>
+                    <div class="col-md-10">
+                        <InputText class="form-control" @bind-Value="dataModel.RetailPrice" />
+                        <ValidationMessage For="@(() => dataModel.RetailPrice)" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="@dataModel.WholesalePrice" class="col-md-2 col-form-label mr-2">Wholesale Price:</label>
+                    <div class="col-md-10">
+                        <InputText class="form-control" @bind-Value="dataModel.WholesalePrice" />
+                        <ValidationMessage For="@(() => dataModel.WholesalePrice)" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-md-2 col-form-label mr-2">Product:</label>
+                    <div class="col-md-10">
+                        <select @bind="dataModel.ProductId">
+                            @foreach (var product in productModel)
+                            {
+                                if (inventoryId == 0)
+                                {
+                                    <option value="@Convert.ToInt32(product.ProductId)">@product.Name</option>
+                                }
+                                else
+                                {
+                                    <option value="@Convert.ToInt32(product.ProductId)" selected="@SelectProduct(Convert.ToInt32(product.ProductId))">@product.Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 text-right">
+                        <button type="submit" class="btn btn-success"> Save</button>
+                    </div>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int inventoryId { get; set; }
+
+    public ViewModel.InventoryManageModel dataModel = new();
+    public List<ViewModel.ProductVIewModel> productModel = new();
+    private Business.Helpers.ResultHandler notif = new();
+
+    protected async override Task OnInitializedAsync()
+    {
+        if (inventoryId != 0)
+        {
+            using (var DbAccess = new Business.Product.Facades.Inventory())
+            {
+                var _Model = await DbAccess.GetById(inventoryId);
+                if (_Model == null)
+                {
+                    await session.SetItemAsync(Business.Globals.SessionNotifName,new Business.Helpers.ResultHandler(){ ResultMsg= "Inventory not found on database, please contact your administrator.",Result= false });
+                    navManager.NavigateTo("/Admin/Inventory");
+                }
+                else
+                {
+                    dataModel = ViewModel.InventoryManageModel.ToModel(_Model);
+                }
+            }
+        }
+        using (var DbAccessCategory = new Business.Product.Facades.Product())
+        {
+            var _CModel = await DbAccessCategory.GetAll();
+            if (_CModel != null)
+            {
+                productModel = ViewModel.ProductVIewModel.ToModelList(_CModel);
+            }
+        }
+    }
+
+    private async Task ExecuteForm()
+    {
+        if (!checkProduct())
+        {
+            notif = new Business.Helpers.ResultHandler() { ResultMsg = "Please enter valid category", Result = false };
+        }
+        else
+        {
+            using (var DbAccess = new Business.Product.Facades.Inventory())
+            {
+                var model = ViewModel.InventoryManageModel.ToBusinessModel(dataModel);
+                Business.Helpers.ResultHandler result;
+                result = inventoryId != 0 ? await DbAccess.UpdateInventory(model) : await DbAccess.AddInventory(model);
+
+                await session.SetItemAsync(Business.Globals.SessionNotifName, new Business.Helpers.ResultHandler() { ResultMsg = result.ResultMsg, Result = result.Result });
+                navManager.NavigateTo("/Admin/Inventory");
+            }
+        }
+    }
+    private bool checkProduct()
+    {
+        if (dataModel.ProductId == 0) return false;
+        return true;
+    }
+    private bool SelectProduct(int productId)
+    {
+        if (productId == dataModel.ProductId) return true;
+        return false;
+    }
+}

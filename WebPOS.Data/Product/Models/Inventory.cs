@@ -16,9 +16,6 @@ namespace WebPOS.Data.Product.Models
         public string UOM { get; set; }
         public double RetailPrice { get; set; }
         public double WholesalePrice { get; set; }
-        public byte[] Image { get; set; }
-        public string ImageName { get; set; }
-        public string ImageType { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }

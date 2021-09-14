@@ -63,16 +63,16 @@ namespace WebPOS.Data.Product.DataAccess
         public async Task<bool> UpdateInventory(Models.Inventory inventory)
         {
             var p = inventory;
-            string sqlSyntax = @"Update inventories Set Description=@Description,Quantity=@Quantity,UOM=@UOM,RetailPrice=@RetailPrice,WholesalePrice=@WholesalePrice,
-                                Image=@Image,ImageName=@ImageName,ImageType=@ImageType,updatedAt=@UpdatedAt Where InventoryId=@InventoryId";
+            string sqlSyntax = @"Update inventories Set ProductId=@ProductId,Description=@Description,Quantity=@Quantity,UOM=@UOM,RetailPrice=@RetailPrice,WholesalePrice=@WholesalePrice,
+                                updatedAt=@UpdatedAt Where InventoryId=@InventoryId";
             var result = await ModifyData(sqlSyntax, p, connString);
             return result == 0 ? false : true;
         }
         public async Task<bool> AddInventory(Models.Inventory inventory)
         {
             var p = inventory;
-            string sqlSyntax = @"Insert Into inventories(Description,Quantity,UOM,RetailPrice,WholesalePrice,Image,ImageName,ImageType,createdAt,updatedAt)
-                                    VALUES(@Name,@CategoryId,@CreatedAt,@UpdatedAt)";
+            string sqlSyntax = @"Insert Into inventories(ProductId,Description,Quantity,UOM,RetailPrice,WholesalePrice,createdAt,updatedAt)
+                                    VALUES(@ProductId,@Description,@Quantity,@UOM,@RetailPrice,@WholesalePrice,@CreatedAt,@UpdatedAt)";
             var result = await ModifyData(sqlSyntax, p, connString);
             return result == 0 ? false : true;
         }
