@@ -1,0 +1,235 @@
+﻿@page "/Admin/Project"
+
+@using WebPOS.BlazorUI.Shared.Components.Modals
+@inject Blazored.SessionStorage.ISessionStorageService session
+@inject NavigationManager navManager;
+<div class="container">
+    @if (notif?.ResultMsg!=null)
+    {
+        <div class="row">
+            <div class="error-notif ">
+                <em>@notif.ResultMsg</em>
+            </div>
+        </div>
+    }
+    @if (showConfirmModal)
+    {
+        <div class="row">
+            <ConfirmModal ConfirmationResult="getConfirmModalResult" DataName="user"></ConfirmModal>
+        </div>
+    }
+    <div class="row m-2">
+        <button class="btn btn-primary" @onclick="()=>AddClick()">Add User</button>
+    </div>
+    <div class="row">
+        <div class="c-table">
+            <div class="c-table-header">
+                <div class="c-table-search">
+                    <span class="oi oi-magnifying-glass" />
+                    <input type="text" name="search" @onchange="SearchItem" />
+                </div>
+            </div>
+            <div class="c-table-body text-center">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>
+                                Project Id
+                            </th>
+                            <th>
+                                Name
+                            </th>
+                            <th colspan="2">
+                                Address
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (pageList != null)
+                        {
+                            foreach (var proj in pageList)
+                            {
+                                <tr class="@IsActive(proj.ProjectId)" @onclick="()=>RowClick(proj.ProjectId)">
+                                    <td>
+                                        @proj.ProjectId
+                                    </td>
+                                    <td>
+                                        @proj.Name
+                                    </td>
+                                    <td colspan="2">
+                                        @proj.Address
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="4">
+                                    No Records Found.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                @if (pageList != null)
+                {
+                    <div>
+                        <div class="row">
+                            <em>Selected @pageList.Count() items out of @filteredList.Count() items.</em>
+                        </div>
+                        @if (totalPage > 1)
+                        {
+                            <div class="row">
+                                @for (var pageIndex = 0; pageIndex < totalPage; pageIndex++)
+                                {
+                                    var btnCount = pageIndex + 1;
+                                    <button class="btn btn-primary" @onclick="()=>PageBtnClick(btnCount)">@btnCount</button>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    @if (selectedItem != null)
+    {
+        <div class="row">
+            <div class="data-controller">
+                <button class="btn btn-primary" @onclick="()=>UpdateClick()">Update</button>
+                <button type="button" class="btn btn-danger" @onclick="()=> { showConfirmModal = true; }">Delete</button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<ViewModel.ProjectViewModel> dataList;
+    private int? selectedItem;
+    private bool skipRenderOnce = false;
+    private Business.Helpers.ResultHandler notif = new();
+
+    private int currentPage = 1;
+    private int totalPage = 0;
+    private int rowPageCount = 5;
+    private List<ViewModel.ProjectViewModel> filteredList;
+    private List<ViewModel.ProjectViewModel> pageList;
+
+    protected override bool ShouldRender()
+    {
+        if (skipRenderOnce)
+        {
+            skipRenderOnce = false;
+            return false;
+        }
+        return true;
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        using (var DbAccess = new Business.Project.Facades.Projects())
+        {
+            dataList = ViewModel.ProjectViewModel.ToModelList(await DbAccess.GetAll());
+        }
+
+        if (dataList != null)
+        {
+            filteredList = dataList;
+            RefreshTablePage();
+        }
+        notif = await session.GetItemAsync<Business.Helpers.ResultHandler>(Business.Globals.SessionNotifName);
+        await session.ClearAsync();
+    }
+
+    private void PageBtnClick(int newPage)
+    {
+        if (currentPage != newPage)
+        {
+            currentPage = newPage;
+            RefreshTablePage();
+        }
+        else
+        {
+            skipRenderOnce = true;
+        }
+    }
+    private void RefreshTablePage()
+    {
+        if (filteredList.Count() > 0)
+        {
+            var _totalPage = (decimal)filteredList.Count() / (decimal)rowPageCount;
+            totalPage = Convert.ToInt32(Math.Ceiling(_totalPage));
+
+            var firstItemPageIndex = currentPage > 1 ? (currentPage - 1) * rowPageCount : 0;
+            var retrieveItemCount = (currentPage != totalPage) ? rowPageCount : (filteredList.Count() - ((currentPage - 1) * rowPageCount));
+            pageList = filteredList.GetRange(firstItemPageIndex, retrieveItemCount).ToList();
+        }
+        else
+        {
+            pageList = null;
+        }
+    }
+    private void RowClick(int id)
+    {
+        if (selectedItem == id) { showConfirmModal = false; }
+        selectedItem = (selectedItem != id) ? id : null;
+    }
+    private string IsActive(int id)
+    {
+        return (selectedItem != null && id == selectedItem) ? "row-active" : "row-not-active";
+    }
+
+    private void UpdateClick()
+    {
+        string url = string.Format("/Admin/Project/Manage/{0}", selectedItem);
+        navManager.NavigateTo(url);
+    }
+    private void AddClick()
+    {
+        navManager.NavigateTo("/Admin/Project/Manage/");
+    }
+    private async void DeleteClick()
+    {
+        using (var DbAccess = new Business.Project.Facades.Projects())
+        {
+            var _id = Convert.ToInt32(selectedItem);
+            var result = await DbAccess.Remove(_id);
+            if (result.Result)
+            {
+                dataList = dataList.Where(c => c.ProjectId != _id).ToList();
+                filteredList = dataList;
+                RefreshTablePage();
+                selectedItem = null;
+            }
+
+            notif = new Business.Helpers.ResultHandler()
+            {
+                ResultMsg = result.ResultMsg,
+                Result = result.Result,
+            };
+        }
+    }
+    private void SearchItem(ChangeEventArgs args)
+    {
+        var searchKey = args.Value.ToString();
+        if (string.IsNullOrEmpty(searchKey))
+        {
+            filteredList = dataList;
+            RefreshTablePage();
+            return;
+        }
+        filteredList = dataList.Where(c => c.Name.Contains(searchKey)).ToList();
+        RefreshTablePage();
+
+    }
+
+    private bool showConfirmModal = false;
+    private void getConfirmModalResult(bool _result)
+    {
+        if (_result)
+        {
+            DeleteClick();
+        }
+        showConfirmModal = false;
+    }
+}

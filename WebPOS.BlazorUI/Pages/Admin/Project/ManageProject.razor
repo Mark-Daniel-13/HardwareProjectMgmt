@@ -1,0 +1,81 @@
+﻿@page "/Admin/Project/Manage/"
+@page "/Admin/Project/Manage/{dataId:int}"
+@inject NavigationManager navManager;
+@inject Blazored.SessionStorage.ISessionStorageService session
+<div class="container">
+    @if (notif?.ResultMsg != null)
+    {
+        <div class="row">
+            <div class="error-notif ">
+                <em>@notif.ResultMsg</em>
+            </div>
+        </div>
+    }
+    <div class="row">
+        <div class="row">
+            <EditForm Model="dataModel" OnValidSubmit="ExecuteForm" class="card-body">
+                <DataAnnotationsValidator />
+                <div class="form-group row">
+                    <label for="@dataModel.Name" class="col-md-2 col-form-label mr-2">Project Name:</label>
+                    <div class="col-md-10">
+                        <InputText class="form-control" @bind-Value="dataModel.Name" />
+                        <ValidationMessage For="@(() => dataModel.Name)" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="@dataModel.Address" class="col-md-2 col-form-label mr-2">Address:</label>
+                    <div class="col-md-10">
+                        <InputText class="form-control" @bind-Value="dataModel.Address" />
+                        <ValidationMessage For="@(() => dataModel.Address)" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 text-right">
+                        <button type="submit" class="btn btn-success"> Save</button>
+                    </div>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int dataId { get; set; }
+
+    public ViewModel.ProjectManageModel dataModel = new();
+    private Business.Helpers.ResultHandler notif = new();
+
+    protected async override Task OnInitializedAsync()
+    {
+        if (dataId != 0)
+        {
+            using (var DbAccess = new Business.Project.Facades.Projects())
+            {
+
+                var _dataModel = await DbAccess.GetById(dataId);
+                if (_dataModel == null)
+                {
+                    await session.SetItemAsync(Business.Globals.SessionNotifName, new Business.Helpers.ResultHandler() { ResultMsg = "Project not found on database, please contact your administrator.", Result = false });
+                    navManager.NavigateTo("/Admin/Project");
+                }
+                else
+                {
+                    dataModel = ViewModel.ProjectManageModel.ToModel(_dataModel);
+                }
+            }
+        }
+    }
+    private async Task ExecuteForm()
+    {
+        using (var DbAccess = new Business.Project.Facades.Projects())
+        {
+            var model = ViewModel.ProjectManageModel.ToBusinessModel(dataModel);
+            Business.Helpers.ResultHandler result;
+            result = dataId != 0 ? await DbAccess.Update(model) : await DbAccess.Add(model);
+
+            await session.SetItemAsync(Business.Globals.SessionNotifName, new Business.Helpers.ResultHandler() { ResultMsg = result.ResultMsg, Result = result.Result });
+            navManager.NavigateTo("/Admin/Project");
+        }
+    }
+}

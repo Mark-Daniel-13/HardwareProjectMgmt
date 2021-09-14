@@ -12,7 +12,7 @@ namespace WebPOS.Data.Users.DataAccess
 {
     public class User:GeneralDataAccess
     {
-        string connString = ConfigurationManager.ConnectionStrings["Resto_POS"]?.ConnectionString;
+        string connString = ConfigurationManager.ConnectionStrings["App_DB"]?.ConnectionString;
         //force get is to either retrieve soft deleted data or not
         public async Task<List<Models.User>> GetAll(bool forceGet = false) 
         {
