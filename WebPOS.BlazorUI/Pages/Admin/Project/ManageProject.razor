@@ -2,6 +2,7 @@
 @page "/Admin/Project/Manage/{dataId:int}"
 @inject NavigationManager navManager;
 @inject Blazored.SessionStorage.ISessionStorageService session
+@using Shared.Components.RequiredItems
 <div class="container">
     @if (notif?.ResultMsg != null)
     {
@@ -12,31 +13,77 @@
         </div>
     }
     <div class="row">
-        <div class="row">
-            <EditForm Model="dataModel" OnValidSubmit="ExecuteForm" class="card-body">
-                <DataAnnotationsValidator />
-                <div class="form-group row">
-                    <label for="@dataModel.Name" class="col-md-2 col-form-label mr-2">Project Name:</label>
-                    <div class="col-md-10">
-                        <InputText class="form-control" @bind-Value="dataModel.Name" />
-                        <ValidationMessage For="@(() => dataModel.Name)" />
+        @if (!showUpdate) { 
+            <div class="row">
+                <div class="container-fluid">
+                    <div class="row">
+                        <p>Name:<span>@dataModel.Name</span></p>
+                    </div>
+                    <div class="row">
+                        <p>Address:<span>@dataModel.Address</span></p>
+                    </div>
+                    <div class="row">
+                        <p>Status:<span>@((Business.Enums.ProjectStatus)dataModel.StatusId)</span></p>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12 text-right">
+                            <button @onclick="()=>{ showUpdate = true; }" class="btn btn-primary">Update</button>
+                        </div>
                     </div>
                 </div>
-                <div class="form-group row">
-                    <label for="@dataModel.Address" class="col-md-2 col-form-label mr-2">Address:</label>
-                    <div class="col-md-10">
-                        <InputText class="form-control" @bind-Value="dataModel.Address" />
-                        <ValidationMessage For="@(() => dataModel.Address)" />
+            </div>
+        }else{ 
+            <div class="row">
+                <EditForm Model="dataModel" OnValidSubmit="ExecuteForm" class="card-body">
+                    <DataAnnotationsValidator />
+                    <div class="form-group row">
+                        <label for="@dataModel.Name" class="col-md-2 col-form-label mr-2">Project Name:</label>
+                        <div class="col-md-10">
+                            <InputText class="form-control" @bind-Value="dataModel.Name" />
+                            <ValidationMessage For="@(() => dataModel.Name)" />
+                        </div>
                     </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-12 text-right">
-                        <button type="submit" class="btn btn-success"> Save</button>
+                    <div class="form-group row">
+                        <label for="@dataModel.Address" class="col-md-2 col-form-label mr-2">Address:</label>
+                        <div class="col-md-10">
+                            <InputText class="form-control" @bind-Value="dataModel.Address" />
+                            <ValidationMessage For="@(() => dataModel.Address)" />
+                        </div>
                     </div>
-                </div>
-            </EditForm>
-        </div>
+                    <div class="form-group row">
+                        <label class="col-md-2 col-form-label mr-2">Status:</label>
+                        <div class="col-md-10">
+                            <select @bind="dataModel.StatusId">
+                                @foreach (var status in Enum.GetValues(typeof(Business.Enums.ProjectStatus)))
+                                {
+                                    if (dataId == 0)
+                                    {
+                                        <option value="@Convert.ToInt32(status)">@status</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@Convert.ToInt32(status)" selected="@SelectStatus(Convert.ToInt32(status))">@status</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12 text-right">
+                            <button type="submit" class="btn btn-success"> Save</button>
+                            <button type="button" @onclick="()=> { showUpdate = false; }" class="btn btn-danger"> Cancel</button>
+                        </div>
+                    </div>
+                </EditForm>
+            </div>
+        }
     </div>
+    @if (dataId != 0)
+    {
+        <div class="row">
+            <WebPOS.BlazorUI.Shared.Components.RequiredItems.RequiredItems ProjectId="dataId"/>
+        </div>
+    }
 </div>
 
 @code {
@@ -45,6 +92,7 @@
 
     public ViewModel.ProjectManageModel dataModel = new();
     private Business.Helpers.ResultHandler notif = new();
+    private bool showUpdate = false;
 
     protected async override Task OnInitializedAsync()
     {
@@ -74,8 +122,13 @@
             Business.Helpers.ResultHandler result;
             result = dataId != 0 ? await DbAccess.Update(model) : await DbAccess.Add(model);
 
-            await session.SetItemAsync(Business.Globals.SessionNotifName, new Business.Helpers.ResultHandler() { ResultMsg = result.ResultMsg, Result = result.Result });
-            navManager.NavigateTo("/Admin/Project");
+            notif = result;
+            showUpdate = (result.Result) ? false : true;
         }
+    }
+    private bool SelectStatus(int statusId)
+    {
+        if (statusId == dataModel.StatusId) return true;
+        return false;
     }
 }

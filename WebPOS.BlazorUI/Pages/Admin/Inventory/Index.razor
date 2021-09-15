@@ -70,7 +70,7 @@
                         {
                             foreach (var product in pageList)
                             {
-                                <tr class="@IsActive(product.ProductId)" @onclick="()=>RowClick(product.ProductId)">
+                                <tr class="@IsActive(product.InventoryId)" @onclick="()=>RowClick(product.InventoryId)">
                                     <td>
                                         @product.InventoryId
                                     </td>
@@ -205,10 +205,10 @@
             pageList = null;
         }
     }
-    private void RowClick(int productId)
+    private void RowClick(int id)
     {
-        if (selectedItem == productId) { showConfirmModal = false; }
-        selectedItem = (selectedItem != productId) ? productId : null;
+        if (selectedItem == id) { showConfirmModal = false; }
+        selectedItem = (selectedItem != id) ? id : null;
     }
     private string IsActive(int productId)
     {
@@ -254,7 +254,7 @@
             RefreshTablePage();
             return;
         }
-        filteredList = dataList.Where(i => i.Description.Contains(searchKey)).ToList();
+        filteredList = dataList.Where(i => i.Description.ToLower().Contains(searchKey)).ToList();
         RefreshTablePage();
 
     }

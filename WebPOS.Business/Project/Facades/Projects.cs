@@ -73,7 +73,7 @@ namespace WebPOS.Business.Project.Facades
         private bool isDataValid(Models.Projects project, bool includeId = false)
         {
             bool isValid = true;
-            if (string.IsNullOrEmpty(project.Name))
+            if (string.IsNullOrEmpty(project.Name) || project.StatusId == 0)
             {
                 isValid = false;
             }

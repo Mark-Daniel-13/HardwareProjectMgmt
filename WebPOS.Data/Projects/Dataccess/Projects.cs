@@ -28,15 +28,15 @@ namespace WebPOS.Data.Projects.Dataccess
         public async Task<bool> Update(Models.Projects project)
         {
             var p = project;
-            string sqlSyntax = @"Update projects Set Name=@Name,Address=@Address,updatedAt=@UpdatedAt Where ProjectId=@ProjectId";
+            string sqlSyntax = @"Update projects Set Name=@Name,Address=@Address,StatusId=@StatusId,updatedAt=@UpdatedAt Where ProjectId=@ProjectId";
             var result = await ModifyData(sqlSyntax, p, connString);
             return result == 0 ? false : true;
         }
         public async Task<bool> Add(Models.Projects project)
         {
             var p = project;
-            string sqlSyntax = @"Insert Into projects(Name,Address,createdAt,updatedAt)
-                                    VALUES(@Name,@Address,@CreatedAt,@UpdatedAt)";
+            string sqlSyntax = @"Insert Into projects(Name,Address,StatusId,createdAt,updatedAt)
+                                    VALUES(@Name,@Address,@StatusId,@CreatedAt,@UpdatedAt)";
             var result = await ModifyData(sqlSyntax, p, connString);
             return result == 0 ? false : true;
         }

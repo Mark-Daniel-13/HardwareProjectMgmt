@@ -218,7 +218,7 @@
             RefreshTablePage();
             return;
         }
-        filteredList = categoryList.Where(c => c.Name.Contains(searchKey)).ToList();
+        filteredList = categoryList.Where(c => c.Name.ToLower().Contains(searchKey)).ToList();
         RefreshTablePage();
 
     }

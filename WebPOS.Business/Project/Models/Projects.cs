@@ -11,6 +11,7 @@ namespace WebPOS.Business.Project.Models
         public int ProjectId { get; set; }
         public string Name { get; set;}
         public string Address { get; set; }
+        public int StatusId { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }
@@ -23,6 +24,7 @@ namespace WebPOS.Business.Project.Models
                 ProjectId = model.ProjectId,
                 Name = model.Name,
                 Address = model.Address,
+                StatusId = model.StatusId,
                 CreatedAt = model.CreatedAt,
                 UpdatedAt = model.UpdatedAt,
                 DeletedAt = model.DeletedAt,
@@ -36,6 +38,7 @@ namespace WebPOS.Business.Project.Models
                 ProjectId = model.ProjectId,
                 Name = model.Name,
                 Address = model.Address,
+                StatusId = model.StatusId,
                 CreatedAt = model.CreatedAt,
                 UpdatedAt = model.UpdatedAt,
                 DeletedAt = model.DeletedAt,
@@ -49,6 +52,7 @@ namespace WebPOS.Business.Project.Models
                 ProjectId = model.ProjectId,
                 Name = model.Name,
                 Address = model.Address,
+                StatusId = model.StatusId,
                 CreatedAt = model.CreatedAt,
                 UpdatedAt = model.UpdatedAt,
                 DeletedAt = model.DeletedAt,

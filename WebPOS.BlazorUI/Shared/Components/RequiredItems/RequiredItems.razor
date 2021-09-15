@@ -1,10 +1,8 @@
-﻿@page "/Admin/Project"
-
-@using WebPOS.BlazorUI.Shared.Components.Modals
+﻿@using WebPOS.BlazorUI.Shared.Components.Modals
 @inject Blazored.SessionStorage.ISessionStorageService session
 @inject NavigationManager navManager;
 <div class="container">
-    @if (notif?.ResultMsg!=null)
+    @if (notif?.ResultMsg != null)
     {
         <div class="row">
             <div class="error-notif ">
@@ -15,11 +13,11 @@
     @if (showConfirmModal)
     {
         <div class="row">
-            <ConfirmModal ConfirmationResult="getConfirmModalResult" DataName="project"></ConfirmModal>
+            <ConfirmModal ConfirmationResult="getConfirmModalResult" DataName="project item"></ConfirmModal>
         </div>
     }
     <div class="row m-2">
-        <button class="btn btn-primary" @onclick="()=>AddClick()">Add Project</button>
+        <button class="btn btn-primary" @onclick="()=> { selectedItem = null; showManageItem = true; }">Add Item</button>
     </div>
     <div class="row">
         <div class="c-table">
@@ -33,16 +31,15 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>
-                                Project Id
-                            </th>
-                            <th>
-                                Name
-                            </th>
                             <th colspan="2">
-                                Address
+                                Item Name
                             </th>
-                            <th>Status</th>
+                            <th>
+                                Required Quantity
+                            </th>
+                            <th>
+                                Remaining Quantity
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -50,18 +47,15 @@
                         {
                             foreach (var proj in pageList)
                             {
-                                <tr class="@IsActive(proj.ProjectId)" @onclick="()=>RowClick(proj.ProjectId)">
-                                    <td>
-                                        @proj.ProjectId
-                                    </td>
-                                    <td>
-                                        @proj.Name
-                                    </td>
+                                <tr class="@IsActive(proj.ProjectItemId)" @onclick="()=>RowClick(proj.ProjectItemId)">
                                     <td colspan="2">
-                                        @proj.Address
+                                        @proj.Item.Description
                                     </td>
                                     <td>
-                                        @((Business.Enums.ProjectStatus)proj.StatusId)
+                                        @proj.RequiredQty
+                                    </td>
+                                    <td>
+                                        @proj.RemainingQty
                                     </td>
                                 </tr>
                             }
@@ -69,7 +63,7 @@
                         else
                         {
                             <tr>
-                                <td colspan="5">
+                                <td colspan="4">
                                     No Records Found.
                                 </td>
                             </tr>
@@ -101,15 +95,18 @@
     {
         <div class="row">
             <div class="data-controller">
-                <button class="btn btn-primary" @onclick="()=>UpdateClick()">Manage</button>
-                <button type="button" class="btn btn-danger" @onclick="()=> { showConfirmModal = true; }">Delete</button>
+                <button class="btn btn-primary" @onclick="()=> { showManageItem = true; }">Update</button>
+                @*<button type="button" class="btn btn-danger" @onclick="()=> { showConfirmModal = true; }">Delete</button>*@
             </div>
         </div>
+    }
+    @if (showManageItem) { 
+        <ProjectItemModal ConfirmationResult="ItemManageResult" ProjectItemsId="Convert.ToInt32(selectedItem)" ProjectId="ProjectId"/>
     }
 </div>
 
 @code {
-    private List<ViewModel.ProjectViewModel> dataList;
+    private List<ViewModel.ProjectItemViewModel> dataList;
     private int? selectedItem;
     private bool skipRenderOnce = false;
     private Business.Helpers.ResultHandler notif = new();
@@ -117,8 +114,11 @@
     private int currentPage = 1;
     private int totalPage = 0;
     private int rowPageCount = 5;
-    private List<ViewModel.ProjectViewModel> filteredList;
-    private List<ViewModel.ProjectViewModel> pageList;
+    private List<ViewModel.ProjectItemViewModel> filteredList;
+    private List<ViewModel.ProjectItemViewModel> pageList;
+    [Parameter]
+    public int ProjectId { get; set; }
+    private bool showManageItem = false;
 
     protected override bool ShouldRender()
     {
@@ -129,18 +129,20 @@
         }
         return true;
     }
-    protected override async Task OnInitializedAsync()
-    {
-        using (var DbAccess = new Business.Project.Facades.Projects())
+    private async Task SyncItemsTable() {
+        using (var DbAccess = new Business.Project.Facades.ProjectItems())
         {
-            dataList = ViewModel.ProjectViewModel.ToModelList(await DbAccess.GetAll());
+            dataList = ViewModel.ProjectItemViewModel.ToModelList(await DbAccess.GetByProjectIdWithInventory(ProjectId));
         }
-
         if (dataList != null)
         {
             filteredList = dataList;
             RefreshTablePage();
         }
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        await SyncItemsTable();
         notif = await session.GetItemAsync<Business.Helpers.ResultHandler>(Business.Globals.SessionNotifName);
         await session.ClearAsync();
     }
@@ -177,24 +179,16 @@
     {
         if (selectedItem == id) { showConfirmModal = false; }
         selectedItem = (selectedItem != id) ? id : null;
+        if (showManageItem) { showManageItem = false; }
     }
     private string IsActive(int id)
     {
         return (selectedItem != null && id == selectedItem) ? "row-active" : "row-not-active";
     }
 
-    private void UpdateClick()
-    {
-        string url = string.Format("/Admin/Project/Manage/{0}", selectedItem);
-        navManager.NavigateTo(url);
-    }
-    private void AddClick()
-    {
-        navManager.NavigateTo("/Admin/Project/Manage/");
-    }
     private async void DeleteClick()
     {
-        using (var DbAccess = new Business.Project.Facades.Projects())
+        using (var DbAccess = new Business.Project.Facades.ProjectItems())
         {
             var _id = Convert.ToInt32(selectedItem);
             var result = await DbAccess.Remove(_id);
@@ -222,7 +216,7 @@
             RefreshTablePage();
             return;
         }
-        filteredList = dataList.Where(c => c.Name.ToLower().Contains(searchKey)).ToList();
+        filteredList = dataList.Where(c => c.Item.Description.ToLower().Contains(searchKey)).ToList();
         RefreshTablePage();
 
     }
@@ -235,5 +229,11 @@
             DeleteClick();
         }
         showConfirmModal = false;
+    }
+    private async Task ItemManageResult(Business.Helpers.ResultHandler result) {
+        notif = result;
+        showManageItem = false;
+        selectedItem = null;
+        await SyncItemsTable();
     }
 }

@@ -11,7 +11,7 @@ namespace WebPOS.Data.Projects.Models
         public int ProjectItemId { get; set;}
         public int ProjectId { get; set;}
         public int ItemId { get; set; }
-        public List<Product.Models.Inventory> Items { get; set; }
+        public Product.Models.Inventory Item { get; set; }
         public double RequiredQty { get; set; }
         public double RemainingQty { get; set; }
         public DateTime CreatedAt { get; set; }

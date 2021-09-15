@@ -230,7 +230,7 @@
             RefreshTablePage();
             return;
         }
-        filteredList = dataList.Where(c => c.Name.Contains(searchKey)).ToList();
+        filteredList = dataList.Where(c => c.Name.ToLower().Contains(searchKey)).ToList();
         RefreshTablePage();
 
     }

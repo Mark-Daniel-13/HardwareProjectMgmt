@@ -1,0 +1,44 @@
+﻿<div class="container">
+    <div class="row">
+        <input type="text"   @oninput="TextChange" value="@InputText" />
+    </div>
+    @if (filteredList != null)
+    {
+    <div class="row">
+        <div class="list-group">
+            @foreach (var item in filteredList)
+            {
+                <a @onclick:preventDefault class="list-group-item list-group-item-action" @onclick="()=>SelectChange(item.ItemValue)">@item.ItemText</a>
+            }
+        </div>
+    </div>
+    }
+</div>
+@code{
+    [Parameter]
+    public List<SelectModel> itemList { get; set; }
+    [Parameter]
+    public EventCallback<int> SelectItemChange { get; set; }
+
+    private string InputText;
+    public List<SelectModel> filteredList { get; set; }
+
+    private void TextChange(ChangeEventArgs args)
+    {
+        var searchKey = args.Value.ToString();
+        InputText = searchKey;
+        if (string.IsNullOrEmpty(searchKey))
+        {
+            filteredList = null;
+            return;
+        }
+        filteredList = itemList.Where(c => c.ItemText.ToLower().Contains(searchKey)).ToList();
+    }
+    private void SelectChange(int value) {
+        var text = itemList.Where(i => i.ItemValue == value)?.FirstOrDefault().ItemText;
+        InputText = text;
+        filteredList = null;
+        SelectItemChange.InvokeAsync(value);
+    }
+
+}

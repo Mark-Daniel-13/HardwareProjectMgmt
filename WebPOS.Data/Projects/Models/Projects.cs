@@ -11,6 +11,7 @@ namespace WebPOS.Data.Projects.Models
         public int ProjectId { get; set; }
         public string Name { get; set; }
         public string Address { get; set; }
+        public int StatusId { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }
