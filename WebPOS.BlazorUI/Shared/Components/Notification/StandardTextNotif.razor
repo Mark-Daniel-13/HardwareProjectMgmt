@@ -1,0 +1,14 @@
+﻿@inject ISnackbar snackBar
+@code {
+    [Parameter]
+    public Business.Helpers.ResultHandler Result { get; set; }
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender) {
+            if (Result.Result) {
+                var sev = Result.Result ? Severity.Success : Severity.Error;
+                snackBar.Add(Result.ResultMsg, sev);
+            }
+        }
+    }
+}

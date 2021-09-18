@@ -1,52 +1,21 @@
-﻿<div class="top-row pl-4 navbar navbar-dark">
-    <a class="navbar-brand" href="">HPMS</a>
-    <button class="navbar-toggler" @onclick="ToggleNavMenu">
-        <span class="navbar-toggler-icon"></span>
-    </button>
-</div>
-
-<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
-    <ul class="nav flex-column">
-        <li class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="oi oi-home" aria-hidden="true"></span> Dashboard
-            </NavLink>
-        </li>
-        <li class="nav-item px-3">
-            <NavLink class="nav-link" href="Admin/Project">
-                <span class="oi oi-box" aria-hidden="true"></span> Projects
-            </NavLink>
-        </li>
-        <li class="nav-item px-3">
-            <NavLink class="nav-link" href="Admin/Inventory">
-                <span class="oi oi-box" aria-hidden="true"></span> Inventory
-            </NavLink>
-        </li>
-        <li class="nav-item px-3">
-            <NavLink class="nav-link" href="Admin/Product">
-                <span class="oi oi-box" aria-hidden="true"></span> Product
-            </NavLink>
-        </li>
-        <li class="nav-item px-3">
-            <NavLink class="nav-link" href="Admin/Category">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Category
-            </NavLink>
-        </li>
-        <li class="nav-item px-3">
-            <NavLink class="nav-link" href="Admin/User">
-                <span class="oi oi-person" aria-hidden="true"></span> User
-            </NavLink>
-        </li>
-    </ul>
-</div>
-
+﻿<MudDrawer @bind-Open="@collapseNavMenu" Elevation="5" Fixed="false" Variant="@DrawerVariant.Mini" OpenMiniOnHover="true">
+    <MudNavMenu Style="margin-top:1em">
+        <MudNavLink Match="NavLinkMatch.All" Href="" Icon="@Icons.Filled.Store">Dashboard</MudNavLink>
+        <MudNavLink Href="Admin/Project" Icon="@Icons.Filled.Report">Projects</MudNavLink>
+        <MudNavLink Href="Admin/Inventory" Icon="@Icons.Filled.CheckBox">Inventory</MudNavLink>
+        <MudNavLink Href="Admin/Product" Icon="@Icons.Filled.ShoppingCart">Product</MudNavLink>
+        <MudNavLink Href="Admin/Category" Icon="@Icons.Filled.Category">Category</MudNavLink>
+        <MudNavLink Href="Admin/User" Icon="@Icons.Filled.ManageAccounts">User</MudNavLink>
+    </MudNavMenu>
+</MudDrawer>
 @code {
-    private bool collapseNavMenu = true;
+    [Parameter]
+    public bool setDrawerStatus { get; set; }
+    private bool collapseNavMenu = false;
 
-    private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
-
-    private void ToggleNavMenu()
+    protected override void OnParametersSet()
     {
-        collapseNavMenu = !collapseNavMenu;
+        collapseNavMenu = setDrawerStatus;
+        base.OnParametersSet();
     }
 }

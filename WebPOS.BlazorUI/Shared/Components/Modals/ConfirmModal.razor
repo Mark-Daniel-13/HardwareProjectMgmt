@@ -1,14 +1,29 @@
-﻿<p>Are you sure you want to remove the selected @DataName?</p>
-<button @onclick="()=>SetResult(true)" class="btn btn-primary">Yes</button>
-<button @onclick="()=>SetResult(false)" class="btn btn-danger">No</button>
+﻿<MudMessageBox @ref="mbox">
+    <MessageContent>
+        Are you sure you want to remove the selected @DataName?
+    </MessageContent>
+    <CancelButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Cancel">Cancel</MudButton>
+    </CancelButton>
+    <YesButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever">Delete</MudButton>
+    </YesButton>
+</MudMessageBox>
 @code {
     [Parameter]
     public string DataName { get; set; }
     [Parameter]
     public EventCallback<bool> ConfirmationResult { get; set; }
-    private bool result { get; set; }
-    private void SetResult(bool _result) {
-        result = _result;
-        ConfirmationResult.InvokeAsync(result);
+
+    MudMessageBox mbox { get; set; }
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var waitResult = await mbox.Show();
+            var result = waitResult is null ? false : true;
+            await ConfirmationResult.InvokeAsync(result);
+        }
     }
 }

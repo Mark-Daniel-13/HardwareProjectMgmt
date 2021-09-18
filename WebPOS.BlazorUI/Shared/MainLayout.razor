@@ -1,36 +1,39 @@
 ﻿@using Pages
+@inject NavigationManager navManager;
 @inherits LayoutComponentBase
 <AuthorizeView>
     <Authorized>
-        <div class="page">
-            <div class="sidebar">
-                <NavMenu />
-            </div>
-            <div class="main">
-                <div class="top-row px-4">
-                    <NavLink class="nav-link" href="Logout">
-                        <span class="oi oi-account-logout" aria-hidden="true"></span> Log Out
-                    </NavLink>
-                </div>
-                <CascadingValue Value="this">
-                    <div class="content px-4">
+        <MudAppBar Color="Color.Primary" Fixed="false" Dense="true">
+            <MudIconButton Icon="@Icons.Material.Filled.Menu" OnClick="@ToggleNavMenu" Color="Color.Inherit" Edge="Edge.Start" />
+            <MudSpacer/>
+            <MudIconButton Icon="@Icons.Material.Filled.Logout" OnClick="@LogOut" Color="Color.Inherit" Edge="Edge.End" />
+        </MudAppBar>
+
+        <MudContainer>
+            <MudDrawerContainer Class="mud-height-full">
+                <NavMenu setDrawerStatus="drawerStatus" />
+                <div class="main">
+                    <CascadingValue Value="this">
                         @Body
-                    </div>
-                </CascadingValue>
-            </div>
-        </div>
+                    </CascadingValue>
+                </div>
+            </MudDrawerContainer>
+        </MudContainer>
     </Authorized>
     <NotAuthorized>
-        <Login/>
+        <Login />
     </NotAuthorized>
 </AuthorizeView>
-@code{ 
-    public Enums.NotifStatus NotifStatus { get; set; }
-    public string NotifMesssage { get; set; }
-    public void ModifyNotif(string newValue,Enums.NotifStatus status) {
-        NotifMesssage = newValue;
-        NotifStatus = status;
-        StateHasChanged();
+<MudThemeProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+@code{
+    bool drawerStatus = false;
+    private void ToggleNavMenu()
+    {
+        drawerStatus = !drawerStatus;
     }
-
+    private void LogOut() {
+        navManager.NavigateTo("/Logout");
+    }
 }

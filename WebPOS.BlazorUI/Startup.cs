@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using MudBlazor;
+using MudBlazor.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,6 +44,18 @@ namespace WebPOS.BlazorUI
             services.AddAuthorizationCore();
             services.AddScoped<AuthenticationStateProvider, StateProvider>();
             services.AddScoped<IAuthService, AuthService>();
+            services.AddMudServices(config => {
+                config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomEnd;
+
+                //config.SnackbarConfiguration.PreventDuplicates = true;
+                config.SnackbarConfiguration.NewestOnTop = false;
+                config.SnackbarConfiguration.ShowCloseIcon = true;
+                config.SnackbarConfiguration.VisibleStateDuration = 10000;
+                config.SnackbarConfiguration.HideTransitionDuration = 500;
+                config.SnackbarConfiguration.ShowTransitionDuration = 500;
+                config.SnackbarConfiguration.SnackbarVariant = Variant.Filled;
+
+            });//Mudblazor Service
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

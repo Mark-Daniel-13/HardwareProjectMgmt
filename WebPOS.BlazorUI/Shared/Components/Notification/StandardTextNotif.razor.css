@@ -1,0 +1,12 @@
+﻿.success-notif {
+    background-color: #D4EDDA;
+    color: #155759;
+}
+.fail-notif {
+    background-color: #F8D7DA;
+    color: #491217;
+}
+.notif-panel {
+ width:100%;
+ text-align:center;
+}

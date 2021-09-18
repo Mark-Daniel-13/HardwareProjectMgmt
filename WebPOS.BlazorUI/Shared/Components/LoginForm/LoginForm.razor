@@ -1,62 +1,55 @@
 ﻿@inject Auth.IAuthService AuthService
 @inject NavigationManager NavManager
-
-<div class="custom-card custom-card-shadow" style="height:100%; width:90%; min-width:350px">
-    <div class="container-fluid custom-login-form">
-        <div class="row login-form-header wrapper-flex-content-middle">
-            <img src="img/user.png" alt="User Login" />
-            <h5 class="mt-2">Sign In</h5>
-        </div>
+<MudPaper Elevation="6" Style="padding:2em; width:100%">
+    <MudGrid class="custom-login-form">
+        <MudItem xs="12" Class="login-form-header wrapper-flex-content-middle" Style="padding-bottom:0px">
+            <MudIcon Icon="@Icons.Material.Filled.AccountCircle" Style="font-size: 2.5rem;" Color="Color.Info" />
+            <MudText Typo="Typo.h5" Align="Align.Center">Sign In</MudText>
+        </MudItem>
         @if (showAuthError)
         {
-            <div class="row">
-                <div class="alert-danger alert text-center" role="alert" style="width:100%"><p>@authErrorText</p></div>
-            </div>
+            <MudItem xs="12">
+                <MudAlert Severity="Severity.Error" Style="width:100%" ContentAlignment="HorizontalAlignment.Center" Variant="Variant.Outlined">@authErrorText</MudAlert>
+            </MudItem>
         }
 
-        <div class="row">
-            <EditForm Model="model" OnValidSubmit="ExecuteLogin" class="card-body">
-                <DataAnnotationsValidator />
-                <div class="form-group row">
-                    <label for="@model.Username" class="col-md-2 col-form-label">Username:</label>
-                    <div class="col-md-10">
-                        <InputText id="username" class="form-control" @bind-Value="model.Username" />
-                        <ValidationMessage For="@(()=>model.Username)" />
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <label for="@model.Password" class="col-md-2 col-form-label">Password:</label>
-                    <div class="col-md-10">
-                        <InputText id="password" type="password" class="form-control" @bind-Value="model.Password" />
-                        <ValidationMessage For="@(()=>model.Password)" />
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-12 text-right">
-                        <button type="submit" class="btn btn-success"> Log In</button>
-                    </div>
-                </div>
-            </EditForm>
-        </div>
-    </div>
-</div>
+        <MudItem xs="12" Style="padding-top:0px">
+            <MudForm @ref="formModel" @bind-IsValid="formIsvalid" @bind-Errors="formErrors">
+                <MudTextField T="string" Label="Username" Required="true" @bind-Value="@model.Username"  @onkeyup="EnterKeyPress" RequiredError="User name is required!" />
+                <MudTextField T="string" Label="Password" InputType="InputType.Password" @onkeyup="EnterKeyPress" @bind-Value="@model.Password" Required="true" RequiredError="Password is required!" />
+            </MudForm>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@ExecuteLogin" Class="mt-4" Style="width:100%">Log In</MudButton>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
 @code {
+    MudForm formModel;
+    bool formIsvalid;
+    string[] formErrors = { };
     private Auth.LoginUserModel model = new();
     private bool showAuthError = false;
     private string authErrorText = "";
 
+    private async Task EnterKeyPress(KeyboardEventArgs args) {
+        if (args.Key == "Enter") {
+            await ExecuteLogin();
+        }
+    }
     private async Task ExecuteLogin()
     {
-        showAuthError = false;
-        var res = await AuthService.Login(model);
-        if (res is not null)
-        {
-            NavManager.NavigateTo("/");
-        }
-        else
-        {
-            authErrorText = "Wrong Username or Password";
-            showAuthError = true;
+        await formModel.Validate();
+        if (formIsvalid) {
+            showAuthError = false;
+            var res = await AuthService.Login(model);
+            if (res is not null)
+            {
+                NavManager.NavigateTo("/");
+            }
+            else
+            {
+                authErrorText = "Wrong Username or Password";
+                showAuthError = true;
+            }
         }
     }
 }

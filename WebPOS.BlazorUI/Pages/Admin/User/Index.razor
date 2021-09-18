@@ -1,32 +1,35 @@
 ﻿@page "/Admin/User"
 
 @using WebPOS.BlazorUI.Shared.Components.Modals
+@using WebPOS.BlazorUI.Shared.Components.Notification 
 @inject Blazored.SessionStorage.ISessionStorageService session
 @inject NavigationManager navManager;
-<div class="container">
-    @if (notif?.ResultMsg!=null)
+<MudGrid>
+    @if (notif?.ResultMsg != null)
     {
-        <div class="row">
-            <div class="error-notif ">
-                <em>@notif.ResultMsg</em>
-            </div>
-        </div>
+        <StandardTextNotif Result="notif" />
     }
     @if (showConfirmModal)
     {
-        <div class="row">
-            <ConfirmModal ConfirmationResult="getConfirmModalResult" DataName="user"></ConfirmModal>
-        </div>
+        <ConfirmModal ConfirmationResult="getConfirmModalResult" DataName="user"></ConfirmModal>
     }
-    <div class="row m-2">
-        <button class="btn btn-primary" @onclick="()=>AddClick()">Add User</button>
-    </div>
-    <div class="row">
+    <MudItem xs="12">
+        <div class="data-controller">
+            <MudButton Variant="Variant.Filled" @onclick="()=>AddClick()" EndIcon="@Icons.Material.Filled.AddBox" Class="btn-custom">Add</MudButton>
+            @if (selectedItem != null)
+            {
+                <MudButton Variant="Variant.Filled" @onclick="()=>UpdateClick()" EndIcon="@Icons.Material.Filled.Update" Class="btn-custom">Update</MudButton>
+                <MudButton Variant="Variant.Filled" @onclick="()=> { showConfirmModal = true; }" EndIcon="@Icons.Material.Filled.Delete" Class="btn-custom">Delete</MudButton>
+            }
+        </div>
+    </MudItem>
+    <MudDivider />
+    <MudItem xs="12">
         <div class="c-table">
             <div class="c-table-header">
                 <div class="c-table-search">
-                    <span class="oi oi-magnifying-glass" />
-                    <input type="text" name="search" @onchange="SearchItem" />
+                    @*<input type="text" class="search-text" placeholder="Search Product" name="search" @onchange="SearchItem" />*@
+                    <MudTextField TextChanged="SearchItem" T="string" Label="Search" Variant="Variant.Outlined" Adornment="Adornment.End" AdornmentIcon="@Icons.Filled.Search" Class="search-text" />
                 </div>
             </div>
             <div class="c-table-body text-center">
@@ -86,35 +89,31 @@
                 </table>
                 @if (pageList != null)
                 {
-                    <div>
-                        <div class="row">
+                    <MudGrid>
+                        <MudItem>
                             <em>Selected @pageList.Count() items out of @filteredList.Count() items.</em>
-                        </div>
+                        </MudItem>
                         @if (totalPage > 1)
                         {
-                            <div class="row">
-                                @for (var pageIndex = 0; pageIndex < totalPage; pageIndex++)
-                                {
-                                    var btnCount = pageIndex + 1;
-                                    <button class="btn btn-primary" @onclick="()=>PageBtnClick(btnCount)">@btnCount</button>
-                                }
-                            </div>
+                            <MudItem>
+                                <div class="page-btn-panel">
+                                    @if (currentPage > 1)
+                                    {
+                                        <button class="btn page-btn" @onclick="() => PageBtnClick(false)">Prev</button>
+                                    }
+                                    @if (currentPage < totalPage)
+                                    {
+                                        <button class="btn page-btn" @onclick="() => PageBtnClick(true)">Next</button>
+                                    }
+                                </div>
+                            </MudItem>
                         }
-                    </div>
+                    </MudGrid>
                 }
             </div>
         </div>
-    </div>
-    @if (selectedItem != null)
-    {
-        <div class="row">
-            <div class="data-controller">
-                <button class="btn btn-primary" @onclick="()=>UpdateClick()">Update</button>
-                <button type="button" class="btn btn-danger" @onclick="()=> { showConfirmModal = true; }">Delete</button>
-            </div>
-        </div>
-    }
-</div>
+    </MudItem>
+</MudGrid>
 
 @code {
     private List<ViewModel.UserViewModel> dataList;
@@ -153,17 +152,10 @@
         await session.ClearAsync();
     }
 
-    private void PageBtnClick(int newPage)
+    private void PageBtnClick(bool isNext)
     {
-        if (currentPage != newPage)
-        {
-            currentPage = newPage;
-            RefreshTablePage();
-        }
-        else
-        {
-            skipRenderOnce = true;
-        }
+        currentPage = isNext ? currentPage + 1 : currentPage - 1;
+        RefreshTablePage();
     }
     private void RefreshTablePage()
     {
@@ -221,9 +213,9 @@
             };
         }
     }
-    private void SearchItem(ChangeEventArgs args)
+    private void SearchItem(string args)
     {
-        var searchKey = args.Value.ToString();
+        var searchKey = args;
         if (string.IsNullOrEmpty(searchKey))
         {
             filteredList = dataList;
