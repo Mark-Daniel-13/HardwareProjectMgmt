@@ -50,3 +50,13 @@
 .main {
     padding-top:2em;
 }
+.pagination-panel {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0;
+    grid-gap: .5em;
+}
+.mud-input {
+    margin-top:1em;
+    margin-bottom:1em;
+}

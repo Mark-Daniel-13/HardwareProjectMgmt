@@ -3,13 +3,20 @@
 @inject Blazored.SessionStorage.ISessionStorageService session
 @inject NavigationManager navManager;
 <MudGrid>
-    <MudItem xs="12" Style="padding:0"><MudText Typo="Typo.h6">Required Item List:</MudText></MudItem>
+    <MudItem xs="12" Style="padding:0"><MudText Typo="Typo.h6">@if (showManageItem) { if (Convert.ToInt32(selectedItem) == 0) {<span>Add new required item:</span> } else { <span>Update required item:</span>}}else{ <span>Required Item List:</span>}</MudText></MudItem>
+    @if (showManageItem)
+    {
+    <MudItem xs="12">
+        <ProjectItemModal ConfirmationResult="ItemManageResult" ProjectItemsId="Convert.ToInt32(selectedItem)" ProjectId="ProjectId" />
+    </MudItem>
+    }
+    else{
     <MudItem xs="12">
         <div class="data-controller">
-            <MudButton Variant="Variant.Filled" @onclick="()=> { selectedItem = null; showManageItem = true; }" EndIcon="@Icons.Material.Filled.AddBox" Color="Color.Primary">Add Item</MudButton>
+            <MudButton Variant="Variant.Filled" @onclick="() => { selectedItem = null; showManageItem = true; }" EndIcon="@Icons.Material.Filled.AddBox" Color="Color.Primary">Add Item</MudButton>
             @if (selectedItem != null)
             {
-                <MudButton Variant="Variant.Filled" @onclick="()=> { showManageItem = true; }" EndIcon="@Icons.Material.Filled.Update" Color="Color.Primary">Update</MudButton>
+                <MudButton Variant="Variant.Filled" @onclick="() => { showManageItem = true; }" EndIcon="@Icons.Material.Filled.Update" Color="Color.Primary">Update</MudButton>
             }
         </div>
     </MudItem>
@@ -41,7 +48,7 @@
                         {
                             foreach (var proj in pageList)
                             {
-                                <tr class="@IsActive(proj.ProjectItemId)" @onclick="()=>RowClick(proj.ProjectItemId)">
+                                <tr class="@IsActive(proj.ProjectItemId)" @onclick="() => RowClick(proj.ProjectItemId)">
                                     <td colspan="2">
                                         @proj.Item.Description
                                     </td>
@@ -72,13 +79,15 @@
                         </MudItem>
                         @if (totalPage > 1)
                         {
-                            <MudItem xs="12" Style="display:flex;justify-content:flex-end;padding:0">
-                                    @if (currentPage > 1){
-                                        <MudButton Variant="Variant.Filled" @onclick="() => PageBtnClick(false)" EndIcon="@Icons.Material.Filled.NavigateBefore" Color="Color.Primary" />
-                                    }
-                                    @if (currentPage < totalPage){
-                                        <MudButton Variant="Variant.Filled" @onclick="() => PageBtnClick(true)" EndIcon="@Icons.Material.Filled.NavigateNext" Color="Color.Primary" />
-                                    }
+                            <MudItem xs="12" Class="pagination-panel">
+                                @if (currentPage > 1)
+                                {
+                                    <MudButton Variant="Variant.Filled" @onclick="() => PageBtnClick(false)" EndIcon="@Icons.Material.Filled.NavigateBefore" Color="Color.Primary" />
+                                }
+                                @if (currentPage < totalPage)
+                                {
+                                    <MudButton Variant="Variant.Filled" @onclick="() => PageBtnClick(true)" EndIcon="@Icons.Material.Filled.NavigateNext" Color="Color.Primary" />
+                                }
                             </MudItem>
                         }
                     </MudGrid>
@@ -86,18 +95,11 @@
             </div>
         </div>
     </MudItem>
-    @if (showManageItem)
-    {
-        <ProjectItemModal ConfirmationResult="ItemManageResult" ProjectItemsId="Convert.ToInt32(selectedItem)" ProjectId="ProjectId" />
     }
 </MudGrid>
 @if (notif?.ResultMsg != null)
 {
     <StandardTextNotif Result="notif" />
-}
-@if (showConfirmModal)
-{
-    <ConfirmModal ConfirmationResult="getConfirmModalResult" DataName="project"></ConfirmModal>
 }
 @code {
     private List<ViewModel.ProjectItemViewModel> dataList;

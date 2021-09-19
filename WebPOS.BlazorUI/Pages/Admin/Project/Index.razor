@@ -79,7 +79,7 @@
                         </MudItem>
                         @if (totalPage > 1)
                         {
-                            <MudItem xs="12" Style="display:flex;justify-content:flex-end;padding:0">
+                            <MudItem xs="12" Class="pagination-panel">
                                     @if (currentPage > 1){
                                         <MudButton Variant="Variant.Filled" @onclick="() => PageBtnClick(false)" EndIcon="@Icons.Material.Filled.NavigateBefore" Color="Color.Primary" />
                                     }

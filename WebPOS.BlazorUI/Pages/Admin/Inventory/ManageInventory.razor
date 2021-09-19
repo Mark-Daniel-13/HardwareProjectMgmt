@@ -2,90 +2,37 @@
 @page "/Admin/Inventory/Manage/{inventoryId:int}"
 @inject NavigationManager navManager;
 @inject Blazored.SessionStorage.ISessionStorageService session
-@using System.IO;
-<div class="container">
-    @if (notif?.ResultMsg != null)
-    {
-        <div class="row">
-            <div class="error-notif ">
-                <em>@notif.ResultMsg</em>
-            </div>
-        </div>
-    }
-    <div class="row">
-        <div class="row">
-            <EditForm Model="dataModel" OnValidSubmit="ExecuteForm" class="card-body">
-                <DataAnnotationsValidator />
-                <div class="form-group row">
-                    <label for="@dataModel.Description" class="col-md-2 col-form-label mr-2">Description:</label>
-                    <div class="col-md-10">
-                        <InputText class="form-control" @bind-Value="dataModel.Description" />
-                        <ValidationMessage For="@(() => dataModel.Description)" />
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <label for="@dataModel.Quantity" class="col-md-2 col-form-label mr-2">Quantity:</label>
-                    <div class="col-md-10">
-                        <InputText class="form-control" @bind-Value="dataModel.Quantity" />
-                        <ValidationMessage For="@(() => dataModel.Quantity)" />
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <label for="@dataModel.UOM" class="col-md-2 col-form-label mr-2">UOM:</label>
-                    <div class="col-md-10">
-                        <InputText class="form-control" @bind-Value="dataModel.UOM" />
-                        <ValidationMessage For="@(() => dataModel.UOM)" />
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <label for="@dataModel.RetailPrice" class="col-md-2 col-form-label mr-2">Retail Price:</label>
-                    <div class="col-md-10">
-                        <InputText class="form-control" @bind-Value="dataModel.RetailPrice" />
-                        <ValidationMessage For="@(() => dataModel.RetailPrice)" />
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <label for="@dataModel.WholesalePrice" class="col-md-2 col-form-label mr-2">Wholesale Price:</label>
-                    <div class="col-md-10">
-                        <InputText class="form-control" @bind-Value="dataModel.WholesalePrice" />
-                        <ValidationMessage For="@(() => dataModel.WholesalePrice)" />
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <label class="col-md-2 col-form-label mr-2">Product:</label>
-                    <div class="col-md-10">
-                        <select @bind="dataModel.ProductId">
-                            @foreach (var product in productModel)
-                            {
-                                if (inventoryId == 0)
-                                {
-                                    <option value="@Convert.ToInt32(product.ProductId)">@product.Name</option>
-                                }
-                                else
-                                {
-                                    <option value="@Convert.ToInt32(product.ProductId)" selected="@SelectProduct(Convert.ToInt32(product.ProductId))">@product.Name</option>
-                                }
-                            }
-                        </select>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-12 text-right">
-                        <button type="submit" class="btn btn-success"> Save</button>
-                    </div>
-                </div>
-            </EditForm>
-        </div>
-    </div>
-</div>
-
+@using WebPOS.BlazorUI.Shared.Components.Notification
+<MudGrid>
+    <MudItem xs="12">
+        <MudPaper Elevation="6" Style="padding:2em; width:50%; margin:auto;">
+            <MudText Typo="Typo.h6" Style="margin-bottom:1em"> @if (inventoryId == 0) {<span>Add</span> } else {<span>Update</span >} Inventory:</MudText>
+            <MudForm @ref="formModel" @bind-IsValid="formIsvalid" @bind-Errors="formErrors">
+                <MudTextField T="string" Label="Description" Required="true" @bind-Value="@dataModel.Description" @onkeyup="EnterKeyPress" RequiredError="Inventory description is required!" />
+                <MudTextField T="double" Label="Quantity" @onkeyup="EnterKeyPress" @bind-Value="@dataModel.Quantity" />
+                <MudTextField T="string" Label="UOM" @onkeyup="EnterKeyPress" @bind-Value="@dataModel.UOM" />
+                <MudTextField T="double" Label="Retail Price" @onkeyup="EnterKeyPress" @bind-Value="@dataModel.RetailPrice" />
+                <MudTextField T="double" Label="Wholesale Price" @onkeyup="EnterKeyPress" @bind-Value="@dataModel.WholesalePrice" />
+                <WebPOS.BlazorUI.Shared.Components.SelectInputSearch.SelectInputSearch itemList="selectModel" SelectItemChange="SelectItemChange"  defaultValue="@dataModel.ProductId"/>
+            </MudForm>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@ExecuteForm" Class="mt-4" Style="width:100%">Save</MudButton>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+@if (notif?.ResultMsg != null)
+{
+    <StandardTextNotif Result="notif" />
+}
 @code {
     [Parameter]
     public int inventoryId { get; set; }
 
     public ViewModel.InventoryManageModel dataModel = new();
-    public List<ViewModel.ProductVIewModel> productModel = new();
     private Business.Helpers.ResultHandler notif = new();
+
+    MudForm formModel;
+    bool formIsvalid;
+    string[] formErrors = { };
 
     protected async override Task OnInitializedAsync()
     {
@@ -96,7 +43,7 @@
                 var _Model = await DbAccess.GetById(inventoryId);
                 if (_Model == null)
                 {
-                    await session.SetItemAsync(Business.Globals.SessionNotifName,new Business.Helpers.ResultHandler(){ ResultMsg= "Inventory not found on database, please contact your administrator.",Result= false });
+                    await session.SetItemAsync(Business.Globals.SessionNotifName, new Business.Helpers.ResultHandler() { ResultMsg = "Inventory not found on database, please contact your administrator.", Result = false });
                     navManager.NavigateTo("/Admin/Inventory");
                 }
                 else
@@ -108,29 +55,30 @@
         using (var DbAccessCategory = new Business.Product.Facades.Product())
         {
             var _CModel = await DbAccessCategory.GetAll();
-            if (_CModel != null)
-            {
-                productModel = ViewModel.ProductVIewModel.ToModelList(_CModel);
-            }
+            selectModel = _CModel != null ? _CModel.Select(i => new Shared.Components.SelectInputSearch.SelectModel() { ItemValue = i.ProductId, ItemText = i.Name }).ToList() : null;
+
         }
     }
-
     private async Task ExecuteForm()
     {
-        if (!checkProduct())
+        await formModel.Validate();
+        if (formIsvalid)
         {
-            notif = new Business.Helpers.ResultHandler() { ResultMsg = "Please enter valid category", Result = false };
-        }
-        else
-        {
-            using (var DbAccess = new Business.Product.Facades.Inventory())
+            if (!checkProduct())
             {
-                var model = ViewModel.InventoryManageModel.ToBusinessModel(dataModel);
-                Business.Helpers.ResultHandler result;
-                result = inventoryId != 0 ? await DbAccess.UpdateInventory(model) : await DbAccess.AddInventory(model);
+                notif = new Business.Helpers.ResultHandler() { ResultMsg = "Please enter valid category", Result = false };
+            }
+            else
+            {
+                using (var DbAccess = new Business.Product.Facades.Inventory())
+                {
+                    var model = ViewModel.InventoryManageModel.ToBusinessModel(dataModel);
+                    Business.Helpers.ResultHandler result;
+                    result = inventoryId != 0 ? await DbAccess.UpdateInventory(model) : await DbAccess.AddInventory(model);
 
-                await session.SetItemAsync(Business.Globals.SessionNotifName, new Business.Helpers.ResultHandler() { ResultMsg = result.ResultMsg, Result = result.Result });
-                navManager.NavigateTo("/Admin/Inventory");
+                    await session.SetItemAsync(Business.Globals.SessionNotifName, new Business.Helpers.ResultHandler() { ResultMsg = result.ResultMsg, Result = result.Result });
+                    navManager.NavigateTo("/Admin/Inventory");
+                }
             }
         }
     }
@@ -143,5 +91,17 @@
     {
         if (productId == dataModel.ProductId) return true;
         return false;
+    }
+    private async Task EnterKeyPress(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+        {
+            await ExecuteForm();
+        }
+    }
+    private List<Shared.Components.SelectInputSearch.SelectModel> selectModel;
+    private void SelectItemChange(int invId)
+    {
+        dataModel.ProductId = invId;
     }
 }

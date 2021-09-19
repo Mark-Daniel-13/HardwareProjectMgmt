@@ -65,10 +65,10 @@ namespace WebPOS.BlazorUI.ViewModel
         public string Description { get; set; }
         [Required(ErrorMessage = "Product is required.")]
         public int ProductId { get; set; }
-        public string Quantity { get; set; }
+        public double Quantity { get; set; }
         public string UOM { get; set; }
-        public string RetailPrice { get; set; }
-        public string WholesalePrice { get; set; }
+        public double RetailPrice { get; set; }
+        public double WholesalePrice { get; set; }
         public static InventoryManageModel ToModel(Business.Product.Models.Inventory inventory)
         {
             if (inventory == null) return null;
@@ -76,10 +76,10 @@ namespace WebPOS.BlazorUI.ViewModel
             {
                 InventoryId = inventory.InventoryId,
                 Description = inventory.Description,
-                Quantity = inventory.Quantity.ToString("N0"),
+                Quantity = inventory.Quantity,
                 UOM = inventory.UOM,
-                RetailPrice = inventory.RetailPrice.ToString("N0"),
-                WholesalePrice = inventory.WholesalePrice.ToString("N0"),
+                RetailPrice = inventory.RetailPrice,
+                WholesalePrice = inventory.WholesalePrice,
                 ProductId = inventory.ProductId,
             };
         }
@@ -92,8 +92,8 @@ namespace WebPOS.BlazorUI.ViewModel
                 Description = inventory.Description,
                 Quantity = Convert.ToDouble(inventory.Quantity),
                 UOM = inventory.UOM,
-                RetailPrice = Convert.ToDouble(inventory.RetailPrice),
-                WholesalePrice = Convert.ToDouble(inventory.WholesalePrice),
+                RetailPrice = inventory.RetailPrice,
+                WholesalePrice = inventory.WholesalePrice,
                 ProductId = inventory.ProductId,
             };
         }

@@ -2,40 +2,32 @@
 @page "/Admin/Category/Manage/{categoryId:int}"
 @inject NavigationManager navManager;
 @inject Blazored.SessionStorage.ISessionStorageService session
-<div class="container">
-    <div class="row">
-        <div class="row">
-            <EditForm Model="categoryModel" OnValidSubmit="ExecuteForm" class="card-body">
-                <DataAnnotationsValidator />
-                <div class="form-group row">
-                    <label for="@categoryModel.Name" class="col-md-2 col-form-label mr-2">Name:</label>
-                    <div class="col-md-10">
-                        <InputText class="form-control" @bind-Value="categoryModel.Name" />
-                        <ValidationMessage For="@(() => categoryModel.Name)" />
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <label for="@categoryModel.Description" class="col-md-2 col-form-label mr-2">Description:</label>
-                    <div class="col-md-10">
-                        <InputText class="form-control" @bind-Value="categoryModel.Description" />
-                        <ValidationMessage For="@(() => categoryModel.Description)" />
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-12 text-right">
-                        <button type="submit" class="btn btn-success"> Save</button>
-                    </div>
-                </div>
-            </EditForm>
-        </div>
-    </div>
-</div>
-
+@using WebPOS.BlazorUI.Shared.Components.Notification
+<MudGrid>
+    <MudItem xs="12">
+        <MudPaper Elevation="6" Style="padding:2em; width:50%; margin:auto;">
+            <MudText Typo="Typo.h6" Style="margin-bottom:1em"> @if (categoryId == 0){<span>Add</span> }else{<span>Update</span>} Category:</MudText>
+            <MudForm @ref="formModel" @bind-IsValid="formIsvalid" @bind-Errors="formErrors">
+                <MudTextField T="string" Label="Name" Required="true" @bind-Value="@categoryModel.Name" @onkeyup="EnterKeyPress" RequiredError="Category name is required!" />
+                <MudTextField T="string" Label="Description" @onkeyup="EnterKeyPress" @bind-Value="@categoryModel.Description" />
+            </MudForm>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@ExecuteForm" Class="mt-4" Style="width:100%">Save</MudButton>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+@if (notif?.ResultMsg != null)
+{
+    <StandardTextNotif Result="notif" />
+}
 @code {
-    [Parameter]
-    public int categoryId { get; set; }
+        [Parameter]
+        public int categoryId { get; set; }
 
     public ViewModel.CategoryManageModel categoryModel = new();
+    private Business.Helpers.ResultHandler notif = new();
+    MudForm formModel;
+    bool formIsvalid;
+    string[] formErrors = { };
 
     protected async override Task OnInitializedAsync()
     {
@@ -46,7 +38,7 @@
                 var _categoryModel = await categoryDbAccess.GetById(categoryId);
                 if (_categoryModel == null)
                 {
-                    await session.SetItemAsync(Business.Globals.SessionNotifName,new Business.Helpers.ResultHandler(){ ResultMsg= "Category not found on database, please contact your administrator.",Result= false });
+                    await session.SetItemAsync(Business.Globals.SessionNotifName, new Business.Helpers.ResultHandler() { ResultMsg = "Category not found on database, please contact your administrator.", Result = false });
                     navManager.NavigateTo("/Admin/Category");
                 }
                 else
@@ -57,16 +49,27 @@
         }
     }
 
+    private async Task EnterKeyPress(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+        {
+            await ExecuteForm();
+        }
+    }
     private async Task ExecuteForm()
     {
         using (var categoryDbAccess = new Business.Product.Facades.Category())
         {
-            var model = ViewModel.CategoryManageModel.ToBusinessModel(categoryModel);
-            Business.Helpers.ResultHandler result;
-            result = categoryId != 0 ? await categoryDbAccess.UpdateCategory(model) : await categoryDbAccess.AddCategory(model);
+            await formModel.Validate();
+            if (formIsvalid)
+            {
+                var model = ViewModel.CategoryManageModel.ToBusinessModel(categoryModel);
+                Business.Helpers.ResultHandler result;
+                result = categoryId != 0 ? await categoryDbAccess.UpdateCategory(model) : await categoryDbAccess.AddCategory(model);
 
-            await session.SetItemAsync(Business.Globals.SessionNotifName, new Business.Helpers.ResultHandler() { ResultMsg = result.ResultMsg, Result = result.Result });
-            navManager.NavigateTo("/Admin/Category");
+                await session.SetItemAsync(Business.Globals.SessionNotifName, new Business.Helpers.ResultHandler() { ResultMsg = result.ResultMsg, Result = result.Result });
+                navManager.NavigateTo("/Admin/Category");
+            }
         }
     }
 }

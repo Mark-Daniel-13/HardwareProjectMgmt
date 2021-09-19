@@ -1,15 +1,17 @@
 ﻿<MudGrid>
     <MudItem xs="12">
-        <MudTextField @bind-Value="@InputText" Immediate="true" TextChanged="TextChange" Label="Select Item" Variant="Variant.Outlined" Margin="Margin.Dense"></MudTextField>
+        <MudTextField @bind-Value="@InputText" Immediate="true" TextChanged="TextChange" Label="Select Item" Variant="Variant.Outlined" Margin="Margin.Dense"/>
     </MudItem>
     @if (filteredList != null && filteredList.Count>0)
     {
     <MudItem xs="12">
-        <MudPaper>
+        <MudPaper Elevation="6">
             <MudList Clickable="true">
-                @foreach (var item in filteredList)
+                @foreach (var item in filteredList.Select((value,i)=> new { i, value }))
                 {
-                    <MudListItem @onclick="()=>SelectChange(item.ItemValue)" Text="@item.ItemText" />
+                    <MudListItem @onclick="()=>SelectChange(item.value.ItemValue)" Text="@item.value.ItemText" />
+                    if (item.i+1 < filteredList.Count())
+                    { <MudDivider/>}
                 }
             </MudList>
         </MudPaper>
@@ -21,6 +23,12 @@
     public List<SelectModel> itemList { get; set; }
     [Parameter]
     public EventCallback<int> SelectItemChange { get; set; }
+    [Parameter]
+    public int defaultValue { get; set; }
+    protected async override Task OnInitializedAsync()
+    {
+        InputText = defaultValue != 0 ? itemList.Where(i=>i.ItemValue == defaultValue).ToList()?.FirstOrDefault().ItemText : null;
+    }
 
     private string InputText;
     public List<SelectModel> filteredList { get; set; }
