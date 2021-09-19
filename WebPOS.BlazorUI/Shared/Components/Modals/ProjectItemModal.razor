@@ -1,37 +1,22 @@
-﻿<div class="container">
-    <div class="row">
-        <EditForm Model="dataModel" OnValidSubmit="ExecuteForm" class="card-body">
-            <DataAnnotationsValidator />
-            <div class="form-group row">
-                <label for="@dataModel.ItemId" class="col-md-2 col-form-label mr-2">Item:</label>
-                <div class="col-md-10">
-                    @if (ProjectItemsId == 0)
-                    {
-                        <WebPOS.BlazorUI.Shared.Components.SelectInputSearch.SelectInputSearch itemList="selectModel" SelectItemChange="SelectItemChange"/>
-                    }
-                    else { 
-                        <InputText class="form-control" @bind-Value="@ItemInputText" readonly="true" />
-                    }
-                    <ValidationMessage For="@(() => dataModel.ItemId)" />
-                </div>
-            </div>
-            <div class="form-group row">
-                <label for="@dataModel.RequiredQty" class="col-md-2 col-form-label mr-2">Required Quantity:</label>
-                <div class="col-md-10">
-                    <InputText class="form-control" @bind-Value="dataModel.RequiredQty" type="number" />
-                    <ValidationMessage For="@(() => dataModel.RequiredQty)" />
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12 text-right">
-                    <button type="submit" class="btn btn-success"> Save</button>
-                    <button @onclick="() => SetResult(new Business.Helpers.ResultHandler() { Result = false })" type="button" class="btn btn-danger">Cancel</button>
-                </div>
-            </div>
-        </EditForm>
-    </div>
-</div>
-
+﻿<MudGrid>
+    <MudItem xs="12">
+        <MudPaper Elevation="6" Style="padding:2em; width:50%; margin:auto;">
+            <MudForm @ref="formModel" @bind-IsValid="formIsvalid" @bind-Errors="formErrors">
+                @if (ProjectItemsId == 0)
+                {
+                    <WebPOS.BlazorUI.Shared.Components.SelectInputSearch.SelectInputSearch itemList="selectModel" SelectItemChange="SelectItemChange" />
+                }
+                else
+                {
+                    <MudTextField T="string" Label="Item Name" Required="true" @bind-Value="@ItemInputText" ReadOnly="true" RequiredError="Item is missing!" />
+                }
+                <MudTextField T="double" Label="Required Qty" Required="true" @bind-Value="@dataModel.RequiredQty" @onkeyup="EnterKeyPress" RequiredError="Required Qty is missing!" />
+            </MudForm>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@ExecuteForm" Class="mt-4" Style="width:100%">Save</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => SetResult(new Business.Helpers.ResultHandler() { Result = false })" Class="mt-4" Style="width:100%">Cancel</MudButton>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
 @code {
     [Parameter]
     public EventCallback<Business.Helpers.ResultHandler> ConfirmationResult { get; set; }
@@ -41,6 +26,11 @@
     public int ProjectItemsId { get; set; }
     private ViewModel.InventoryViewModel invModel { get; set; }
     private Business.Helpers.ResultHandler result { get; set; }
+
+    MudForm formModel;
+    bool formIsvalid;
+    string[] formErrors = { };
+
     private void SetResult(Business.Helpers.ResultHandler _result)
     {
         result = _result;
@@ -57,10 +47,10 @@
         {
             using (var DbAccess = new Business.Project.Facades.ProjectItems())
             {
-                var itemModel = await DbAccess.GetById(ProjectItemsId,true);
+                var itemModel = await DbAccess.GetById(ProjectItemsId, true);
                 dataModel.ItemId = itemModel.ItemId;
                 dataModel.ProjectItemId = ProjectItemsId;
-                dataModel.RequiredQty = itemModel.RequiredQty.ToString();
+                dataModel.RequiredQty = itemModel.RequiredQty;
                 ItemInputText = itemModel.Item.Description;
             }
         }
@@ -73,18 +63,30 @@
             }
         }
     }
-    private void SelectItemChange(int invId) {
+    private void SelectItemChange(int invId)
+    {
         dataModel.ItemId = invId;
     }
     private async Task ExecuteForm()
     {
-        using (var DbAccess = new Business.Project.Facades.ProjectItems())
+        await formModel.Validate();
+        if (formIsvalid)
         {
-            var model = ViewModel.ProjectItemManageModel.ToBusinessModel(dataModel);
-            Business.Helpers.ResultHandler result;
-            result = model.ProjectItemId == 0 ? await DbAccess.Add(model) : await DbAccess.Update(model);
+            using (var DbAccess = new Business.Project.Facades.ProjectItems())
+            {
+                var model = ViewModel.ProjectItemManageModel.ToBusinessModel(dataModel);
+                Business.Helpers.ResultHandler result;
+                result = model.ProjectItemId == 0 ? await DbAccess.Add(model) : await DbAccess.Update(model);
 
-            SetResult(result);
+                SetResult(result);
+            }
+        }
+    }
+    private async Task EnterKeyPress(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+        {
+            await ExecuteForm();
         }
     }
 }

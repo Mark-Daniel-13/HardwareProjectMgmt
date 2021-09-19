@@ -49,7 +49,6 @@ namespace WebPOS.BlazorUI
 
                 //config.SnackbarConfiguration.PreventDuplicates = true;
                 config.SnackbarConfiguration.NewestOnTop = false;
-                config.SnackbarConfiguration.ShowCloseIcon = true;
                 config.SnackbarConfiguration.VisibleStateDuration = 10000;
                 config.SnackbarConfiguration.HideTransitionDuration = 500;
                 config.SnackbarConfiguration.ShowTransitionDuration = 500;

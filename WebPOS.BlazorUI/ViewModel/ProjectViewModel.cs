@@ -124,8 +124,8 @@ namespace WebPOS.BlazorUI.ViewModel
         [Required(ErrorMessage = "Item Id is missing.")]
         public int ItemId { get; set; }
         [Required(ErrorMessage = "Required Quantity is missing.")]
-        public string RequiredQty { get; set; }
-        public string RemainingQty { get; set; }
+        public double RequiredQty { get; set; }
+        public double RemainingQty { get; set; }
         public static ProjectItemManageModel ToModel(Business.Project.Models.ProjectItems pi)
         {
             if (pi == null) return null;
@@ -134,8 +134,8 @@ namespace WebPOS.BlazorUI.ViewModel
                 ProjectItemId = pi.ProjectItemId,
                 ProjectId = pi.ProjectId,
                 ItemId = pi.ItemId,
-                RequiredQty = pi.RequiredQty.ToString("N0"),
-                RemainingQty = pi.RemainingQty.ToString("N0"),
+                RequiredQty = pi.RequiredQty,
+                RemainingQty = pi.RemainingQty,
             };
         }
         public static Business.Project.Models.ProjectItems ToBusinessModel(ProjectItemManageModel pi)
@@ -146,8 +146,8 @@ namespace WebPOS.BlazorUI.ViewModel
                 ProjectItemId = pi.ProjectItemId,
                 ProjectId = pi.ProjectId,
                 ItemId = pi.ItemId,
-                RequiredQty = Convert.ToDouble(pi.RequiredQty),
-                RemainingQty = Convert.ToDouble(pi.RemainingQty),
+                RequiredQty = pi.RequiredQty,
+                RemainingQty = pi.RemainingQty,
             };
         }
     }

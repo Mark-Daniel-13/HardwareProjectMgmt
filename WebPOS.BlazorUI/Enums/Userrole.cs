@@ -8,6 +8,5 @@ namespace WebPOS.BlazorUI.Enums
     public enum Userrole:int
     {
         Admin = 1,
-        Cashier = 2,
     }
 }

@@ -2,98 +2,86 @@
 @page "/Admin/User/Manage/{dataId:int}"
 @inject NavigationManager navManager;
 @inject Blazored.SessionStorage.ISessionStorageService session
-<div class="container">
-    @if (notif?.ResultMsg != null)
-    {
-        <div class="row">
-            <div class="error-notif ">
-                <em>@notif.ResultMsg</em>
-            </div>
-        </div>
-    }
-    <div class="row">
-        <div class="row">
-            <EditForm Model="dataModel" OnValidSubmit="ExecuteForm" class="card-body">
-                <DataAnnotationsValidator />
-                <div class="form-group row">
-                    <label for="@dataModel.FirstName" class="col-md-2 col-form-label mr-2">First Name:</label>
-                    <div class="col-md-10">
-                        <InputText class="form-control" @bind-Value="dataModel.FirstName" />
-                        <ValidationMessage For="@(() => dataModel.FirstName)" />
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <label for="@dataModel.LastName" class="col-md-2 col-form-label mr-2">Last Name:</label>
-                    <div class="col-md-10">
-                        <InputText class="form-control" @bind-Value="dataModel.LastName" />
-                        <ValidationMessage For="@(() => dataModel.LastName)" />
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <label for="@dataModel.Username" class="col-md-2 col-form-label mr-2">Username:</label>
-                    <div class="col-md-10">
-                        <InputText class="form-control" @bind-Value="dataModel.Username" />
-                        <ValidationMessage For="@(() => dataModel.Username)" />
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <label for="@dataModel.Email" class="col-md-2 col-form-label mr-2">Email:</label>
-                    <div class="col-md-10">
-                        <InputText class="form-control" @bind-Value="dataModel.Email" />
-                        <ValidationMessage For="@(() => dataModel.Email)" />
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <label for="@dataModel.Password" class="col-md-2 col-form-label mr-2">Password:</label>
-                    <div class="col-md-10">
-                        <InputText class="form-control" type="password" @bind-Value="dataModel.Password" />
-                        <ValidationMessage For="@(() => dataModel.Password)" />
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <label for="@dataModel.ConfirmPassword" class="col-md-2 col-form-label mr-2">Confirm Password:</label>
-                    <div class="col-md-10">
-                        <InputText class="form-control" type="password" @bind-Value="dataModel.ConfirmPassword" />
-                        <ValidationMessage For="@(() => dataModel.ConfirmPassword)" />
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <label class="col-md-2 col-form-label mr-2">UserRole:</label>
-                    <div class="col-md-10">
-                        <select @bind="dataModel.UserRole">
-                            @foreach (var role in Enum.GetValues(typeof(Enums.Userrole)))
-                            {
-                                if (dataId == 0)
-                                {
-                                    <option value="@Convert.ToInt32(role)">@role</option>
-                                }
-                                else
-                                {
-                                    <option value="@Convert.ToInt32(role)" selected="@SelectRole(Convert.ToInt32(role))">@role</option>
-                                }
-                            }
-                        </select>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-12 text-right">
-                        <button type="submit" class="btn btn-success"> Save</button>
-                    </div>
-                </div>
-            </EditForm>
-        </div>
-    </div>
-</div>
-
+@using WebPOS.BlazorUI.Shared.Components.Notification
+@using System.ComponentModel.DataAnnotations
+@using System.Text.RegularExpressions
+<MudGrid Style="display:flex;justify-content:center;">
+    <MudItem xs="12">
+        <MudPaper Elevation="6" Style="padding:2em; width:50%; margin:auto;">
+            <MudText Typo="Typo.h6" Style="margin-bottom:1em"> @if (dataId == 0) {<span>Add</span> } else {<span>Update</span >} User:</MudText>
+            <MudForm @ref="formModel" @bind-IsValid="formIsvalid" @bind-Errors="formErrors">
+                <MudTextField T="string" Label="First Name" Required="true" @bind-Value="@dataModel.FirstName" @onkeyup="EnterKeyPress" RequiredError="First name is required!" />
+                <MudTextField T="string" Label="Last Name" @onkeyup="EnterKeyPress" @bind-Value="@dataModel.LastName" Required="true" RequiredError="Last name is required!" />
+                <MudTextField T="string" Label="Username" @onkeyup="EnterKeyPress" @bind-Value="@dataModel.Username" Required="true" RequiredError="Username is required!" />
+                <MudTextField T="string" Label="Email" @onkeyup="EnterKeyPress" @bind-Value="@dataModel.Email" Validation="@(new EmailAddressAttribute() {ErrorMessage = "The email address is invalid"})" />
+                <MudTextField T="string" Label="Password" @onkeyup="EnterKeyPress" InputType="InputType.Password" @bind-Value="@dataModel.Password"
+                                Required="@isPasswordReq" RequiredError="Password is required!" @ref="pw" Validation="@(new Func<string, IEnumerable<string>>(PasswordStrength))" />
+                <MudTextField T="string" Label="Confirm Password" @onkeyup="EnterKeyPress" @bind-Value="dataModel.ConfirmPassword" InputType="InputType.Password" Validation="@(new Func<string,string>(PasswordMatch))" />
+                <MudSelect T="int" Label="Role" Strict="true" Variant="Variant.Outlined" MultiSelection="false" SelectedValues="selectedRole" SelectedValuesChanged="RoleChange">
+                    @foreach (var role in Enum.GetValues(typeof(Enums.Userrole)))
+                    {
+                        <MudSelectItem T="int" Value="@Convert.ToInt32(role)">@role</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudForm>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@ExecuteForm" Class="mt-4" Style="width:100%">Save</MudButton>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+@if (notif?.ResultMsg != null)
+{
+    <StandardTextNotif Result="notif" />
+}
 @code {
     [Parameter]
     public int dataId { get; set; }
-
+    HashSet<int> selectedRole = new();
+    MudForm formModel;
+    bool formIsvalid;
+    string[] formErrors = { };
+    MudTextField<string> pw;
+    bool isPasswordReq;
     public ViewModel.UserManageModel dataModel = new();
     private Business.Helpers.ResultHandler notif = new();
 
+    private void RoleChange(HashSet<int> val) {
+        selectedRole = val;
+        dataModel.UserRole = (int)selectedRole?.FirstOrDefault();
+    }
+
+    private IEnumerable<string> PasswordStrength(string pw)
+    {
+        if (string.IsNullOrWhiteSpace(pw))
+        {
+            yield break;
+        }
+        if (pw.Length < 8)
+            yield return "Password must be at least of length 8";
+        if (!Regex.IsMatch(pw, @"[A-Z]"))
+            yield return "Password must contain at least one capital letter";
+        if (!Regex.IsMatch(pw, @"[a-z]"))
+            yield return "Password must contain at least one lowercase letter";
+        if (!Regex.IsMatch(pw, @"[0-9]"))
+            yield return "Password must contain at least one digit";
+    }
+    private string PasswordMatch(string arg)
+    {
+        if (pw.Value != arg)
+            return "Passwords don't match";
+        return null;
+    }
+
+    private async Task EnterKeyPress(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+        {
+            await ExecuteForm();
+        }
+    }
+
     protected async override Task OnInitializedAsync()
     {
+        isPasswordReq = (dataId == 0) ? true : false;
         if (dataId != 0)
         {
             using (var DbAccess = new Business.Users.Facades.User())
@@ -108,28 +96,15 @@
                 else
                 {
                     dataModel = ViewModel.UserManageModel.ToModel(_dataModel);
+                    selectedRole.Add(dataModel.UserRole);
                 }
             }
         }
     }
-    private bool SelectRole(int roleId)
-    {
-        if (roleId == dataModel.UserRole) return true;
-        return false;
-    }
-    private bool checkPassword()
-    {
-        if (dataId != 0) return true;
-        if (string.IsNullOrEmpty(dataModel.Password)) return false;
-        return true;
-    }
     private async Task ExecuteForm()
     {
-        if (!checkPassword())
-        {
-            notif = new Business.Helpers.ResultHandler() { ResultMsg= "Please enter valid password",Result = false};
-        }
-        else
+        await formModel.Validate();
+        if (formIsvalid)
         {
             using (var DbAccess = new Business.Users.Facades.User())
             {
@@ -140,6 +115,7 @@
                 await session.SetItemAsync(Business.Globals.SessionNotifName, new Business.Helpers.ResultHandler() { ResultMsg = result.ResultMsg, Result = result.Result });
                 navManager.NavigateTo("/Admin/User");
             }
+            
         }
     }
 }

@@ -1,35 +1,27 @@
 ﻿@page "/Admin/User"
 
 @using WebPOS.BlazorUI.Shared.Components.Modals
-@using WebPOS.BlazorUI.Shared.Components.Notification 
+@using WebPOS.BlazorUI.Shared.Components.Notification
 @inject Blazored.SessionStorage.ISessionStorageService session
 @inject NavigationManager navManager;
 <MudGrid>
-    @if (notif?.ResultMsg != null)
-    {
-        <StandardTextNotif Result="notif" />
-    }
-    @if (showConfirmModal)
-    {
-        <ConfirmModal ConfirmationResult="getConfirmModalResult" DataName="user"></ConfirmModal>
-    }
+    <MudItem xs="12" Style="padding:0"><MudText Typo="Typo.h6">User List:</MudText></MudItem>
     <MudItem xs="12">
         <div class="data-controller">
-            <MudButton Variant="Variant.Filled" @onclick="()=>AddClick()" EndIcon="@Icons.Material.Filled.AddBox" Class="btn-custom">Add</MudButton>
+            <MudButton Variant="Variant.Filled" @onclick="()=>AddClick()" EndIcon="@Icons.Material.Filled.AddBox" Color="Color.Primary">Add</MudButton>
             @if (selectedItem != null)
             {
-                <MudButton Variant="Variant.Filled" @onclick="()=>UpdateClick()" EndIcon="@Icons.Material.Filled.Update" Class="btn-custom">Update</MudButton>
-                <MudButton Variant="Variant.Filled" @onclick="()=> { showConfirmModal = true; }" EndIcon="@Icons.Material.Filled.Delete" Class="btn-custom">Delete</MudButton>
+                <MudButton Variant="Variant.Filled" @onclick="()=>UpdateClick()" EndIcon="@Icons.Material.Filled.Update" Color="Color.Primary">Update</MudButton>
+                <MudButton Variant="Variant.Filled" @onclick="()=> { showConfirmModal = true; }" EndIcon="@Icons.Material.Filled.Delete" Color="Color.Primary">Delete</MudButton>
             }
         </div>
     </MudItem>
-    <MudDivider />
     <MudItem xs="12">
         <div class="c-table">
             <div class="c-table-header">
+                <MudSpacer/>
                 <div class="c-table-search">
-                    @*<input type="text" class="search-text" placeholder="Search Product" name="search" @onchange="SearchItem" />*@
-                    <MudTextField TextChanged="SearchItem" T="string" Label="Search" Variant="Variant.Outlined" Adornment="Adornment.End" AdornmentIcon="@Icons.Filled.Search" Class="search-text" />
+                    <MudTextField Margin="Margin.Dense" TextChanged="SearchItem" T="string" Label="Search" Variant="Variant.Outlined" Adornment="Adornment.End" AdornmentIcon="@Icons.Filled.Search"/>
                 </div>
             </div>
             <div class="c-table-body text-center">
@@ -53,7 +45,7 @@
                             </th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody style="text-align:center">
                         @if (pageList != null)
                         {
                             foreach (var user in pageList)
@@ -90,22 +82,18 @@
                 @if (pageList != null)
                 {
                     <MudGrid>
-                        <MudItem>
+                        <MudItem xs="12" Style="padding-bottom:0">
                             <em>Selected @pageList.Count() items out of @filteredList.Count() items.</em>
                         </MudItem>
                         @if (totalPage > 1)
                         {
-                            <MudItem>
-                                <div class="page-btn-panel">
-                                    @if (currentPage > 1)
-                                    {
-                                        <button class="btn page-btn" @onclick="() => PageBtnClick(false)">Prev</button>
+                            <MudItem xs="12" Style="display:flex;justify-content:flex-end;padding:0">
+                                    @if (currentPage > 1){
+                                        <MudButton Variant="Variant.Filled" @onclick="() => PageBtnClick(false)" EndIcon="@Icons.Material.Filled.NavigateBefore" Color="Color.Primary" />
                                     }
-                                    @if (currentPage < totalPage)
-                                    {
-                                        <button class="btn page-btn" @onclick="() => PageBtnClick(true)">Next</button>
+                                    @if (currentPage < totalPage){
+                                        <MudButton Variant="Variant.Filled" @onclick="() => PageBtnClick(true)" EndIcon="@Icons.Material.Filled.NavigateNext" Color="Color.Primary" />
                                     }
-                                </div>
                             </MudItem>
                         }
                     </MudGrid>
@@ -115,6 +103,14 @@
     </MudItem>
 </MudGrid>
 
+@if (notif?.ResultMsg != null)
+{
+    <StandardTextNotif Result="notif" />
+}
+@if (showConfirmModal)
+{
+    <ConfirmModal ConfirmationResult="getConfirmModalResult" DataName="user"></ConfirmModal>
+}
 @code {
     private List<ViewModel.UserViewModel> dataList;
     private int? selectedItem;

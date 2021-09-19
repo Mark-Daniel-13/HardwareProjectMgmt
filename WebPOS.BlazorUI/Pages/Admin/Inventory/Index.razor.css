@@ -1,5 +1,10 @@
-﻿.c-table, c-table-header, c-table-body, table {
+﻿.c-table, c-table-body, table {
     width: 100%;
+}
+
+.c-table-header {
+    display: flex;
+    justify-content: space-between;
 }
 
 thead {
@@ -10,4 +15,10 @@ thead {
 tbody > tr:hover {
     background-color: var(--highLightColor);
     cursor: pointer;
+}
+
+.data-controller {
+    display: flex;
+    justify-content: flex-end;
+    grid-gap: 1em;
 }

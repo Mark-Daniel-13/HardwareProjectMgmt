@@ -2,97 +2,71 @@
 @page "/Admin/Project/Manage/{dataId:int}"
 @inject NavigationManager navManager;
 @inject Blazored.SessionStorage.ISessionStorageService session
-@using Shared.Components.RequiredItems
-<div class="container">
-    @if (notif?.ResultMsg != null)
-    {
-        <div class="row">
-            <div class="error-notif ">
-                <em>@notif.ResultMsg</em>
-            </div>
-        </div>
-    }
-    <div class="row">
-        @if (!showUpdate) { 
-            <div class="row">
-                <div class="container-fluid">
-                    <div class="row">
-                        <p>Name:<span>@dataModel.Name</span></p>
-                    </div>
-                    <div class="row">
-                        <p>Address:<span>@dataModel.Address</span></p>
-                    </div>
-                    <div class="row">
-                        <p>Status:<span>@((Business.Enums.ProjectStatus)dataModel.StatusId)</span></p>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-12 text-right">
-                            <button @onclick="()=>{ showUpdate = true; }" class="btn btn-primary">Update</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        }else{ 
-            <div class="row">
-                <EditForm Model="dataModel" OnValidSubmit="ExecuteForm" class="card-body">
-                    <DataAnnotationsValidator />
-                    <div class="form-group row">
-                        <label for="@dataModel.Name" class="col-md-2 col-form-label mr-2">Project Name:</label>
-                        <div class="col-md-10">
-                            <InputText class="form-control" @bind-Value="dataModel.Name" />
-                            <ValidationMessage For="@(() => dataModel.Name)" />
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label for="@dataModel.Address" class="col-md-2 col-form-label mr-2">Address:</label>
-                        <div class="col-md-10">
-                            <InputText class="form-control" @bind-Value="dataModel.Address" />
-                            <ValidationMessage For="@(() => dataModel.Address)" />
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label class="col-md-2 col-form-label mr-2">Status:</label>
-                        <div class="col-md-10">
-                            <select @bind="dataModel.StatusId">
-                                @foreach (var status in Enum.GetValues(typeof(Business.Enums.ProjectStatus)))
-                                {
-                                    if (dataId == 0)
-                                    {
-                                        <option value="@Convert.ToInt32(status)">@status</option>
-                                    }
-                                    else
-                                    {
-                                        <option value="@Convert.ToInt32(status)" selected="@SelectStatus(Convert.ToInt32(status))">@status</option>
-                                    }
-                                }
-                            </select>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-12 text-right">
-                            <button type="submit" class="btn btn-success"> Save</button>
-                            <button type="button" @onclick="()=> { showUpdate = false; }" class="btn btn-danger"> Cancel</button>
-                        </div>
-                    </div>
-                </EditForm>
-            </div>
+@using WebPOS.BlazorUI.Shared.Components.Notification
+<MudGrid>
+    <MudItem  xs="12">
+        @if (!showUpdate)
+        {
+            <MudItem xs="3">
+                <MudPaper style="display:flex;flex-direction:column;">
+                    <MudText Typo="Typo.caption" Style="padding:.5em">Name: @dataModel.Name</MudText>
+                    <MudText Typo="Typo.caption" Style="padding:.5em">Address: @dataModel.Address</MudText>
+                    <MudText Typo="Typo.caption" Style="padding:.5em">Status: @((Business.Enums.ProjectStatus)dataModel.StatusId)</MudText>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="()=>{ showUpdate = true; }">Update</MudButton>
+                </MudPaper>
+            </MudItem>
         }
-    </div>
-    @if (dataId != 0)
+        else
+        {
+            <MudItem xs="12">
+                <MudPaper Elevation="6" Style="padding:2em; width:50%; margin:auto;">
+                    <MudText Typo="Typo.h6" Style="margin-bottom:1em"> @if (dataId == 0) {<span>Add</span> } else {<span>Update</span >} Project:</MudText>
+                    <MudForm @ref="formModel" @bind-IsValid="formIsvalid" @bind-Errors="formErrors">
+                        <MudTextField T="string" Label="Project Name" Required="true" @bind-Value="@dataModel.Name" @onkeyup="EnterKeyPress" RequiredError="Project name is required!" />
+                        <MudTextField T="string" Label="Address" @onkeyup="EnterKeyPress" @bind-Value="@dataModel.Address"/>
+                        <MudSelect T="int" Label="Role" Strict="true" Variant="Variant.Outlined" MultiSelection="false" SelectedValues="selectValue" SelectedValuesChanged="SelectChange">
+                            @foreach (var status in Enum.GetValues(typeof(Business.Enums.ProjectStatus)))
+                            {
+                                <MudSelectItem T="int" Value="@Convert.ToInt32(status)">@status</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudForm>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@ExecuteForm" Class="mt-4" Style="width:100%">Save</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="()=> { showUpdate = false; }" Class="mt-4" Style="width:100%">Cancel</MudButton>
+                </MudPaper>
+            </MudItem>
+        }
+    </MudItem>
+    @if (dataId != 0 && !showUpdate)
     {
-        <div class="row">
-            <WebPOS.BlazorUI.Shared.Components.RequiredItems.RequiredItems ProjectId="dataId"/>
-        </div>
+        <MudItem xs="12">
+            <MudPaper Elevation="6" Style="padding:3em">
+                <WebPOS.BlazorUI.Shared.Components.RequiredItems.RequiredItems ProjectId="dataId" />
+            </MudPaper>
+        </MudItem>
     }
-</div>
-
+</MudGrid>
+@if (notif?.ResultMsg != null)
+{
+    <StandardTextNotif Result="notif" />
+}
 @code {
     [Parameter]
     public int dataId { get; set; }
 
     public ViewModel.ProjectManageModel dataModel = new();
     private Business.Helpers.ResultHandler notif = new();
-    private bool showUpdate = false;
+    private bool showUpdate = true;
+
+    MudForm formModel;
+    bool formIsvalid;
+    string[] formErrors = { };
+    HashSet<int> selectValue = new();
+    private void SelectChange(HashSet<int> val)
+    {
+        selectValue = val;
+        dataModel.StatusId = (int)selectValue?.FirstOrDefault();
+    }
 
     protected async override Task OnInitializedAsync()
     {
@@ -109,26 +83,39 @@
                 }
                 else
                 {
+                    showUpdate = false;
                     dataModel = ViewModel.ProjectManageModel.ToModel(_dataModel);
+                    selectValue.Add(dataModel.StatusId);
                 }
             }
         }
     }
     private async Task ExecuteForm()
     {
-        using (var DbAccess = new Business.Project.Facades.Projects())
+        await formModel.Validate();
+        if (formIsvalid)
         {
-            var model = ViewModel.ProjectManageModel.ToBusinessModel(dataModel);
-            Business.Helpers.ResultHandler result;
-            result = dataId != 0 ? await DbAccess.Update(model) : await DbAccess.Add(model);
+            using (var DbAccess = new Business.Project.Facades.Projects())
+            {
+                var model = ViewModel.ProjectManageModel.ToBusinessModel(dataModel);
+                Business.Helpers.ResultHandler result;
+                result = dataId != 0 ? await DbAccess.Update(model) : await DbAccess.Add(model);
 
-            notif = result;
-            showUpdate = (result.Result) ? false : true;
+                notif = result;
+                showUpdate = (result.Result) ? false : true;
+            }
         }
     }
     private bool SelectStatus(int statusId)
     {
         if (statusId == dataModel.StatusId) return true;
         return false;
+    }
+    private async Task EnterKeyPress(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+        {
+            await ExecuteForm();
+        }
     }
 }

@@ -1,30 +1,24 @@
 ﻿@using WebPOS.BlazorUI.Shared.Components.Modals
+@using WebPOS.BlazorUI.Shared.Components.Notification
 @inject Blazored.SessionStorage.ISessionStorageService session
 @inject NavigationManager navManager;
-<div class="container">
-    @if (notif?.ResultMsg != null)
-    {
-        <div class="row">
-            <div class="error-notif ">
-                <em>@notif.ResultMsg</em>
-            </div>
+<MudGrid>
+    <MudItem xs="12" Style="padding:0"><MudText Typo="Typo.h6">Required Item List:</MudText></MudItem>
+    <MudItem xs="12">
+        <div class="data-controller">
+            <MudButton Variant="Variant.Filled" @onclick="()=> { selectedItem = null; showManageItem = true; }" EndIcon="@Icons.Material.Filled.AddBox" Color="Color.Primary">Add Item</MudButton>
+            @if (selectedItem != null)
+            {
+                <MudButton Variant="Variant.Filled" @onclick="()=> { showManageItem = true; }" EndIcon="@Icons.Material.Filled.Update" Color="Color.Primary">Update</MudButton>
+            }
         </div>
-    }
-    @if (showConfirmModal)
-    {
-        <div class="row">
-            <ConfirmModal ConfirmationResult="getConfirmModalResult" DataName="project item"></ConfirmModal>
-        </div>
-    }
-    <div class="row m-2">
-        <button class="btn btn-primary" @onclick="()=> { selectedItem = null; showManageItem = true; }">Add Item</button>
-    </div>
-    <div class="row">
+    </MudItem>
+    <MudItem xs="12">
         <div class="c-table">
             <div class="c-table-header">
+                <MudSpacer />
                 <div class="c-table-search">
-                    <span class="oi oi-magnifying-glass" />
-                    <input type="text" name="search" @onchange="SearchItem" />
+                    <MudTextField Margin="Margin.Dense" TextChanged="SearchItem" T="string" Label="Search" Variant="Variant.Outlined" Adornment="Adornment.End" AdornmentIcon="@Icons.Filled.Search" />
                 </div>
             </div>
             <div class="c-table-body text-center">
@@ -42,7 +36,7 @@
                             </th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody style="text-align:center">
                         @if (pageList != null)
                         {
                             foreach (var proj in pageList)
@@ -72,39 +66,39 @@
                 </table>
                 @if (pageList != null)
                 {
-                    <div>
-                        <div class="row">
+                    <MudGrid>
+                        <MudItem xs="12" Style="padding-bottom:0">
                             <em>Selected @pageList.Count() items out of @filteredList.Count() items.</em>
-                        </div>
+                        </MudItem>
                         @if (totalPage > 1)
                         {
-                            <div class="row">
-                                @for (var pageIndex = 0; pageIndex < totalPage; pageIndex++)
-                                {
-                                    var btnCount = pageIndex + 1;
-                                    <button class="btn btn-primary" @onclick="()=>PageBtnClick(btnCount)">@btnCount</button>
-                                }
-                            </div>
+                            <MudItem xs="12" Style="display:flex;justify-content:flex-end;padding:0">
+                                    @if (currentPage > 1){
+                                        <MudButton Variant="Variant.Filled" @onclick="() => PageBtnClick(false)" EndIcon="@Icons.Material.Filled.NavigateBefore" Color="Color.Primary" />
+                                    }
+                                    @if (currentPage < totalPage){
+                                        <MudButton Variant="Variant.Filled" @onclick="() => PageBtnClick(true)" EndIcon="@Icons.Material.Filled.NavigateNext" Color="Color.Primary" />
+                                    }
+                            </MudItem>
                         }
-                    </div>
+                    </MudGrid>
                 }
             </div>
         </div>
-    </div>
-    @if (selectedItem != null)
+    </MudItem>
+    @if (showManageItem)
     {
-        <div class="row">
-            <div class="data-controller">
-                <button class="btn btn-primary" @onclick="()=> { showManageItem = true; }">Update</button>
-                @*<button type="button" class="btn btn-danger" @onclick="()=> { showConfirmModal = true; }">Delete</button>*@
-            </div>
-        </div>
+        <ProjectItemModal ConfirmationResult="ItemManageResult" ProjectItemsId="Convert.ToInt32(selectedItem)" ProjectId="ProjectId" />
     }
-    @if (showManageItem) { 
-        <ProjectItemModal ConfirmationResult="ItemManageResult" ProjectItemsId="Convert.ToInt32(selectedItem)" ProjectId="ProjectId"/>
-    }
-</div>
-
+</MudGrid>
+@if (notif?.ResultMsg != null)
+{
+    <StandardTextNotif Result="notif" />
+}
+@if (showConfirmModal)
+{
+    <ConfirmModal ConfirmationResult="getConfirmModalResult" DataName="project"></ConfirmModal>
+}
 @code {
     private List<ViewModel.ProjectItemViewModel> dataList;
     private int? selectedItem;
@@ -129,7 +123,8 @@
         }
         return true;
     }
-    private async Task SyncItemsTable() {
+    private async Task SyncItemsTable()
+    {
         using (var DbAccess = new Business.Project.Facades.ProjectItems())
         {
             dataList = ViewModel.ProjectItemViewModel.ToModelList(await DbAccess.GetByProjectIdWithInventory(ProjectId));
@@ -147,17 +142,10 @@
         await session.ClearAsync();
     }
 
-    private void PageBtnClick(int newPage)
+    private void PageBtnClick(bool isNext)
     {
-        if (currentPage != newPage)
-        {
-            currentPage = newPage;
-            RefreshTablePage();
-        }
-        else
-        {
-            skipRenderOnce = true;
-        }
+        currentPage = isNext ? currentPage + 1 : currentPage - 1;
+        RefreshTablePage();
     }
     private void RefreshTablePage()
     {
@@ -207,9 +195,9 @@
             };
         }
     }
-    private void SearchItem(ChangeEventArgs args)
+    private void SearchItem(string args)
     {
-        var searchKey = args.Value.ToString();
+        var searchKey = args;
         if (string.IsNullOrEmpty(searchKey))
         {
             filteredList = dataList;
@@ -230,7 +218,8 @@
         }
         showConfirmModal = false;
     }
-    private async Task ItemManageResult(Business.Helpers.ResultHandler result) {
+    private async Task ItemManageResult(Business.Helpers.ResultHandler result)
+    {
         notif = result;
         showManageItem = false;
         selectedItem = null;
