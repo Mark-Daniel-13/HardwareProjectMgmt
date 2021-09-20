@@ -37,10 +37,6 @@ namespace WebPOS.BlazorUI
             services.AddServerSideBlazor().AddCircuitOptions(o=> { o.DetailedErrors = true; });//for dev env only
             //services.AddSingleton<WeatherForecastService>();
 
-            //sql connection config
-            var sqlConnection = new Business.Helpers.DbAccessConfig(Configuration.GetConnectionString("App_DB"));
-            services.AddSingleton(sqlConnection);
-
             services.AddHttpClient();
             services.AddBlazoredLocalStorage();
             services.AddBlazoredSessionStorage();
