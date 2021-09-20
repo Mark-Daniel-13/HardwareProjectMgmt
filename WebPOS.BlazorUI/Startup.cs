@@ -1,6 +1,5 @@
 using Blazored.LocalStorage;
 using Blazored.SessionStorage;
-using ElectronNET.API;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -34,9 +33,13 @@ namespace WebPOS.BlazorUI
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddRazorPages();
-            services.AddServerSideBlazor();//for prod env only
-            //services.AddServerSideBlazor().AddCircuitOptions(o=> { o.DetailedErrors = true; });//for dev env only
-            services.AddSingleton<WeatherForecastService>();
+            //services.AddServerSideBlazor();//for prod env only
+            services.AddServerSideBlazor().AddCircuitOptions(o=> { o.DetailedErrors = true; });//for dev env only
+            //services.AddSingleton<WeatherForecastService>();
+
+            //sql connection config
+            var sqlConnection = new Business.Helpers.DbAccessConfig(Configuration.GetConnectionString("App_DB"));
+            services.AddSingleton(sqlConnection);
 
             services.AddHttpClient();
             services.AddBlazoredLocalStorage();
@@ -85,10 +88,6 @@ namespace WebPOS.BlazorUI
                 endpoints.MapBlazorHub();
                 endpoints.MapFallbackToPage("/_Host");
             });
-
-            //electron code block
-            //Task.Run(async () => await Electron.WindowManager.CreateBrowserViewAsync());
-            Task.Run(async () => await Electron.WindowManager.CreateWindowAsync());
         }
     }
 }

@@ -1,4 +1,3 @@
-using ElectronNET.API;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
@@ -21,7 +20,6 @@ namespace WebPOS.BlazorUI
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    webBuilder.UseElectron(args); //electron syntax
                     webBuilder.UseStartup<Startup>();
                 });
     }
